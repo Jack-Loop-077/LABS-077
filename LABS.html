@@ -337,6 +337,19 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
 .rep-stats b{color:var(--ink)}
 .mini-st{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
 .mini-st svg{width:12px;height:12px}
+
+/* حضور متطور */
+.t-c{cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.t-c:active{transform:scale(.95)}
+.t-c.fon{background:rgba(255,255,255,.32);border-color:rgba(255,255,255,.95)}
+.roster-item .rname{cursor:pointer}
+.roster-item[data-st="present"]{border-inline-start:3px solid var(--ok)}
+.roster-item[data-st="absent"]{border-inline-start:3px solid var(--no)}
+.roster-item[data-st="excused"]{border-inline-start:3px solid var(--ex)}
+#recentsBox .chip{cursor:pointer;transition:border-color .15s,background .15s}
+#recentsBox .chip:hover{border-color:var(--prim-line);background:var(--prim-soft)}
+#recentsBox .chip b{color:var(--prim-deep)}
+[data-theme="dark"] #recentsBox .chip b{color:#8FD9CF}
 </style>
 </head>
 <body>
@@ -384,15 +397,18 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
   <main>
     <!-- ░░ تسجيل الحضور ░░ -->
     <section class="view" id="view-attend">
-      <div class="card">
-        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>جلسة الحضور</h2>
-        <div class="grid g2">
-          <div class="field"><label class="lbl">المرحلة</label><select class="sel" id="selStage"></select></div>
-          <div class="field"><label class="lbl">المادة</label><select class="sel" id="selSubject"></select></div>
-          <div class="field"><label class="lbl">الشعبة</label><select class="sel" id="selSection"></select></div>
-          <div class="field"><label class="lbl">المختبر (الجلسة الحالية)</label><select class="sel" id="selLab"></select></div>
+            <div class="card">
+        <h2 style="margin-bottom:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>جلسة الحضور<span style="flex:1"></span><button class="btn btn-sm btn-soft" id="sessToggle" style="display:none">طيّ</button></h2>
+        <div id="recentsBox" style="display:none;margin-top:12px"></div>
+        <div id="sessForm" style="margin-top:12px">
+          <div class="grid g2">
+            <div class="field"><label class="lbl">المرحلة</label><select class="sel" id="selStage"></select></div>
+            <div class="field"><label class="lbl">المادة</label><select class="sel" id="selSubject"></select></div>
+            <div class="field"><label class="lbl">الشعبة</label><select class="sel" id="selSection"></select></div>
+            <div class="field"><label class="lbl">المختبر (الجلسة الحالية)</label><select class="sel" id="selLab"></select></div>
+          </div>
+          <div class="field" style="margin-top:10px"><label class="lbl">التاريخ — غيّره للرجوع وتعديل يوم سابق</label><input class="inp" type="date" id="selDate"></div>
         </div>
-        <div class="field" style="margin-top:10px"><label class="lbl">التاريخ — غيّره للرجوع وتعديل يوم سابق</label><input class="inp" type="date" id="selDate"></div>
       </div>
 
       <div id="attendBody"></div>
@@ -623,6 +639,7 @@ const ICO = {
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/></svg>',
   ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l6 4V6L6 10H3z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19.2 6a8.5 8.5 0 0 1 0 12"/></svg>',
   empty: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M1 4h22v4H1zM10 12h4"/></svg>'
 };
 const STATUS = {
@@ -794,7 +811,8 @@ let sel = { stage: "", subjectId: "", section: "", lab: "", date: todayStr() };
 try { Object.assign(sel, JSON.parse(localStorage.getItem("hadhir.sel") || "{}")); } catch {}
 sel.date = todayStr();
 let attRecords = new Map();   // studentId -> record
-let rosterQ = "";
+let rosterQ = "", rosterStFilter = "";
+let sessCollapsed = !!(sel.stage && sel.subjectId && sel.lab);
 let attKey = "";
 
 function opt(v, t, selVal) { return '<option value="' + esc(v) + '"' + (v === selVal ? " selected" : "") + ">" + esc(t) + "</option>"; }
@@ -846,6 +864,8 @@ function fillRSubject() {
     sel.lab     = $("#selLab").value;
     sel.date    = $("#selDate").value || todayStr();
     localStorage.setItem("hadhir.sel", JSON.stringify(sel));
+    rosterStFilter = "";
+    if (sel.stage && sel.subjectId && sel.lab) { sessCollapsed = true; pushRecent(); }
     renderAttend();
   });
 });
@@ -875,6 +895,7 @@ function rosterStudents() {
 
 function renderAttend() {
   const body = $("#attendBody");
+  updateSessCard();
   if (!sel.stage || !sel.subjectId || !sel.lab) {
     if (attUnsub) { attUnsub(); attUnsub = null; attKey = ""; attRecords = new Map(); }
     body.innerHTML = '<div class="card"><div class="empty">' + ICO.empty +
@@ -890,17 +911,19 @@ function renderAttend() {
     '</div>' +
     '<div id="roster"></div>' +
     '<div style="display:flex;gap:8px;margin-top:4px">' +
+      '<button class="btn btn-p" id="btnRollCall" style="flex:1.35">' + ICO.mic + "وضع المناداة</button>" +
+      '<button class="btn btn-soft" id="btnGuest" style="flex:1">' + ICO.plus + "من مختبر آخر</button>" +
+    "</div>" +
+    '<div style="display:flex;gap:8px;margin-top:8px">' +
       '<button class="btn btn-g" id="btnAllPresent" style="flex:1;color:var(--ok)">' + ICO.check + "الباقي حاضر</button>" +
       '<button class="btn btn-g" id="btnAllAbsent" style="flex:1;color:var(--no)">' + ICO.x + "الباقي غائب</button>" +
-    "</div>" +
-    '<div style="margin-top:8px">' +
-      '<button class="btn btn-soft" id="btnGuest" style="width:100%">' + ICO.plus + "طالب من مختبر آخر</button>" +
     "</div>" +
     '<div class="legend"><span><i class="l-p">' + ICO.check + "</i>حاضر</span><span><i class=\"l-a\">" + ICO.x + "</i>غائب</span><span><i class=\"l-e\">" + ICO.pulse + "</i>مجاز</span></div>" +
     '<button class="btn btn-sm" id="btnClearSession" style="margin:12px auto 0;display:flex;color:var(--no);background:var(--no-soft)">مسح تحديدات هذه الجلسة</button>' +
     "</div>";
   $("#btnAllPresent").onclick = () => fillRemaining("present");
   $("#btnAllAbsent").onclick = () => fillRemaining("absent");
+  $("#btnRollCall").onclick = openRollCall;
   $("#btnGuest").onclick = openGuestPicker;
   $("#btnClearSession").onclick = clearSession;
   $("#rosterSearch").addEventListener("input", e => { rosterQ = e.target.value; renderRoster(); });
@@ -941,17 +964,20 @@ function renderRoster() {
     rel += '<span class="t-date" style="background:rgba(241,112,112,.25);border:1px solid rgba(241,112,112,.6)">' +
       (lkOn ? (opened ? "🔓 خارج الفصل — مفتوح مؤقتاً" : "🔒 خارج الفصل — محمي") : "خارج الفصل الحالي") + "</span>";
   }
+  const F = rosterStFilter;
+  const cell = (f, cls, val, lab) =>
+    '<div class="t-c' + (cls ? " " + cls : "") + (F === f && f ? " fon" : "") + '" data-f="' + f + '" title="اضغط للفلترة"><b>' + val + "</b><span>" + lab + "</span></div>";
   $("#ticket").innerHTML =
     '<div class="t-head"><span>' + esc(subj ? subj.name : "") + '</span><span class="sep">•</span><span>' +
     esc(sel.stage) + '</span><span class="sep">•</span><span>' + esc(sel.lab) +
     (sel.section ? '</span><span class="sep">•</span><span>شعبة ' + esc(sel.section) : "") +
     '</span><span class="t-date">' + fmtDate(sel.date) + "</span>" + rel + "</div>" +
     '<div class="t-counts">' +
-      '<div class="t-c"><b>' + total + "</b><span>الكل</span></div>" +
-      '<div class="t-c p"><b>' + c.present + "</b><span>حاضر</span></div>" +
-      '<div class="t-c a"><b>' + c.absent + "</b><span>غائب</span></div>" +
-      '<div class="t-c e"><b>' + c.excused + "</b><span>مجاز</span></div>" +
-      '<div class="t-c"><b>' + unmarked + "</b><span>بلا تحديد</span></div>" +
+    cell("", "", total, "الكل") +
+    cell("present", "p", c.present, "حاضر") +
+    cell("absent", "a", c.absent, "غائب") +
+    cell("excused", "e", c.excused, "مجاز") +
+    cell("unmarked", "", unmarked, "بلا تحديد") +
     "</div>";
 
   if (!total) {
@@ -960,23 +986,29 @@ function renderRoster() {
     return;
   }
   const q = rosterQ.trim();
-  const roster = q ? rosterAll.filter(s => s.name.includes(q)) : rosterAll;
-  const guests = q ? guestsAll.filter(r => (r.studentName || "").includes(q)) : guestsAll;
+  const passF = id => !F || (F === "unmarked" ? !attRecords.get(id) : ((attRecords.get(id) || {}).status === F));
+  const roster = rosterAll.filter(s => (!q || s.name.includes(q)) && passF(s.id));
+  const guests = guestsAll.filter(r => (!q || (r.studentName || "").includes(q)) && (!F || (F !== "unmarked" && r.status === F)));
   if (!roster.length && !guests.length) {
-    box.innerHTML = '<div class="empty"><p>لا توجد نتائج للبحث «' + esc(q) + "»</p></div>";
+    box.innerHTML = '<div class="empty"><p>' +
+      (q ? "لا نتائج للبحث «" + esc(q) + "»" : "لا أحد ضمن هذا الفلتر") +
+      (F ? ' — <a href="#" id="clrF" style="color:var(--prim);font-weight:700;text-decoration:none">إلغاء الفلتر</a>' : "") + "</p></div>";
+    const cf = box.querySelector("#clrF");
+    if (cf) cf.onclick = ev => { ev.preventDefault(); rosterStFilter = ""; renderRoster(); };
     return;
   }
   let h = "", i = 0;
   roster.forEach(s => {
     i++;
     const r = attRecords.get(s.id);
-    h += '<div class="roster-item"><span class="num">' + i + '</span><div class="rname"><b>' + esc(s.name) +
-      '</b><span class="meta">' + esc(s.section ? "شعبة " + s.section : "") + "</span></div>" +
+    h += '<div class="roster-item" data-sid="' + esc(s.id) + '"' + (r ? ' data-st="' + r.status + '"' : "") +
+      '><span class="num">' + i + '</span><div class="rname"><b>' + esc(s.name) +
+      '</b><span class="meta">' + esc([s.section ? "شعبة " + s.section : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) + "</span></div>" +
       segHTML(r, s.id) + "</div>";
   });
   guests.forEach(r => {
     i++;
-    h += '<div class="roster-item guest"><span class="num">' + i + '</span><div class="rname"><b>' + esc(r.studentName) +
+    h += '<div class="roster-item guest" data-sid="' + esc(r.studentId) + '" data-st="' + r.status + '"><span class="num">' + i + '</span><div class="rname"><b>' + esc(r.studentName) +
       '</b><span class="meta"><span class="badge-lab">ضيف — يُسجَّل على ' + esc(r.lab) + "</span></span></div>" +
       segHTML(r, r.studentId) + "</div>";
   });
@@ -999,6 +1031,128 @@ async function clearSession() {
     toast("مُسحت تحديدات الجلسة (" + ids.length + ")");
     audit("clear_session", "مسح تحديدات جلسة " + sel.date + " — " + sel.lab + " (" + ids.length + ")");
   } catch (e) { toast("تعذّر المسح: " + e.code, "err"); }
+}
+/* ---------- كارد الجلسة: طيّ + جلسات أخيرة ---------- */
+function updateSessCard() {
+  const form = $("#sessForm"), tg = $("#sessToggle");
+  if (!form || !tg) return;
+  const complete = !!(sel.stage && sel.subjectId && sel.lab);
+  if (!complete) sessCollapsed = false;
+  form.style.display = sessCollapsed ? "none" : "";
+  const rb = $("#recentsBox");
+  if (sessCollapsed) { if (rb) rb.style.display = "none"; }
+  else renderRecents();
+  tg.style.display = complete ? "" : "none";
+  tg.textContent = sessCollapsed ? "تغيير الجلسة" : "طيّ";
+}
+$("#sessToggle").onclick = () => { sessCollapsed = !sessCollapsed; updateSessCard(); };
+
+function loadRecents() { try { return JSON.parse(localStorage.getItem("hadhir.recents") || "[]"); } catch { return []; } }
+function pushRecent() {
+  const it = { stage: sel.stage, subjectId: sel.subjectId, section: sel.section || "", lab: sel.lab };
+  let arr = loadRecents().filter(x => !(x.stage === it.stage && x.subjectId === it.subjectId && (x.section || "") === it.section && x.lab === it.lab));
+  arr.unshift(it);
+  localStorage.setItem("hadhir.recents", JSON.stringify(arr.slice(0, 4)));
+}
+function renderRecents() {
+  const box = $("#recentsBox"); if (!box) return;
+  const arr = loadRecents()
+    .map(it => ({ ...it, subj: subjects.find(s => s.id === it.subjectId) }))
+    .filter(x => x.subj && settings.stages.includes(x.stage) && settings.labs.includes(x.lab));
+  if (!arr.length) { box.style.display = "none"; box.innerHTML = ""; return; }
+  box.style.display = "";
+  box._arr = arr;
+  box.innerHTML = '<p class="lbl" style="margin-bottom:7px">جلسات أخيرة — ضغطة وحدة ترجّعك</p><div class="chips">' +
+    arr.map((x, i) => '<button class="chip" data-rc="' + i + '"><b>' + esc(x.subj.name) + '</b><span style="opacity:.75">' +
+      esc(x.lab) + (x.section ? " • " + esc(x.section) : "") + "</span></button>").join("") + "</div>";
+}
+$("#recentsBox").addEventListener("click", e => {
+  const b = e.target.closest("[data-rc]"); if (!b) return;
+  const x = ($("#recentsBox")._arr || [])[Number(b.dataset.rc)]; if (!x) return;
+  sel.stage = x.stage; sel.subjectId = x.subjectId; sel.section = x.section || ""; sel.lab = x.lab; sel.date = todayStr();
+  localStorage.setItem("hadhir.sel", JSON.stringify(sel));
+  fillPickers();
+  rosterStFilter = "";
+  sessCollapsed = true;
+  renderAttend();
+});
+
+/* ---------- وضع المناداة ---------- */
+function openRollCall() {
+  if (!sel.stage || !sel.subjectId || !sel.lab) { toast("اختر المرحلة والمادة والمختبر أولاً", "err"); return; }
+  guardLock(sel.date, sel.stage).then(ok => { if (ok) startRollCall(); });
+}
+function startRollCall() {
+  const list = rosterStudents().filter(s => !attRecords.get(s.id));
+  if (!list.length) { toast("الكل محدد مسبقاً — ماكو «بلا تحديد» للمناداة"); return; }
+  let i = 0;
+  const chosen = new Map();
+  const wrap = document.createElement("div");
+  openModal({ title: "وضع المناداة — " + (list.length) + " طالب", body: wrap, actions: [{ label: "إنهاء", cls: "btn-g", onClick: closeModal }] });
+  const kh = e => {
+    if (e.key === "1") mark("present");
+    else if (e.key === "2") mark("absent");
+    else if (e.key === "3") mark("excused");
+    else if (e.key === " ") { e.preventDefault(); if (i < list.length) { i++; draw(); } }
+  };
+  addEventListener("keydown", kh);
+  setModalCloseHook(() => removeEventListener("keydown", kh));
+  function mark(st) {
+    if (i >= list.length) return;
+    const s = list[i];
+    if (navigator.vibrate) navigator.vibrate(18);
+    chosen.set(s.id, st);
+    const rec = attRecords.get(s.id);
+    if (!(rec && rec.status === st)) setStatus(s.id, st);
+    i++;
+    draw();
+  }
+  function fin() {
+    const m = { present: 0, absent: 0, excused: 0 };
+    let sk = 0;
+    list.forEach(s => {
+      const st = chosen.get(s.id) || (attRecords.get(s.id) || {}).status;
+      if (st && m[st] !== undefined) m[st]++; else sk++;
+    });
+    wrap.innerHTML =
+      '<div style="text-align:center;padding:10px 0 4px">' +
+      '<div style="font-size:42px">✅</div><b style="font-size:17px;display:block;margin:8px 0 14px">خلصت المناداة</b>' +
+      '<div class="summary">' +
+      '<div class="sum p"><b>' + m.present + '</b><span>حاضر</span></div>' +
+      '<div class="sum a"><b>' + m.absent + '</b><span>غائب</span></div>' +
+      '<div class="sum e"><b>' + m.excused + '</b><span>مجاز</span></div>' +
+      '<div class="sum"><b>' + sk + '</b><span>تخطّي</span></div></div>' +
+      (sk ? '<p class="hint" style="margin-top:10px">المتخطون بقوا «بلا تحديد» — تكدر تسجلهم بزر «الباقي غائب».</p>' : "") +
+      "</div>";
+  }
+  function draw() {
+    if (i >= list.length) { fin(); return; }
+    const s = list[i];
+    const pc = Math.round(i / list.length * 100);
+    wrap.innerHTML =
+      '<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">' +
+      '<span class="chip" style="flex:none"><b>' + (i + 1) + '</b>&nbsp;/ ' + list.length + '</span>' +
+      '<div class="rep-bar" style="flex:1;margin:0"><i style="width:' + pc + '%;background:var(--prim)"></i></div></div>' +
+      '<div style="text-align:center;padding:14px 6px 4px">' +
+      '<span class="avatar" style="width:58px;height:58px;font-size:23px;margin:0 auto;display:grid">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
+      '<b style="display:block;font-size:21px;margin:12px 0 3px;line-height:1.5">' + esc(s.name) + '</b>' +
+      '<span class="hint">' + (esc([s.section ? "شعبة " + s.section : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) || "&nbsp;") + '</span></div>' +
+      '<div class="grid g3" style="margin-top:16px">' +
+      '<button class="btn" data-rcst="present" style="background:var(--ok);color:#fff;min-height:58px;flex-direction:column;gap:3px">' + ICO.check + 'حاضر</button>' +
+      '<button class="btn" data-rcst="absent" style="background:var(--no);color:#fff;min-height:58px;flex-direction:column;gap:3px">' + ICO.x + 'غائب</button>' +
+      '<button class="btn" data-rcst="excused" style="background:var(--ex);color:#fff;min-height:58px;flex-direction:column;gap:3px">' + ICO.pulse + 'مجاز</button></div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button class="btn btn-g btn-sm" data-rcprev style="flex:1"' + (i ? "" : " disabled") + '>السابق</button>' +
+      '<button class="btn btn-g btn-sm" data-rcskip style="flex:1">تخطّي</button></div>' +
+      '<p class="hint" style="text-align:center;margin-top:10px;opacity:.65">من الكيبورد: 1 حاضر • 2 غائب • 3 مجاز • مسافة = تخطّي</p>';
+  }
+  wrap.addEventListener("click", e => {
+    const st = e.target.closest("[data-rcst]");
+    if (st) { mark(st.dataset.rcst); return; }
+    if (e.target.closest("[data-rcprev]")) { i = Math.max(0, i - 1); draw(); return; }
+    if (e.target.closest("[data-rcskip]")) { if (i < list.length) { i++; draw(); } }
+  });
+  draw();
 }
 
 async function setStatus(studentId, status) {
@@ -1023,8 +1177,24 @@ async function setStatus(studentId, status) {
 }
 
 $("#attendBody").addEventListener("click", e => {
-  const b = e.target.closest(".seg button"); if (!b) return;
-  setStatus(b.closest(".seg").dataset.sid, b.dataset.st);
+  const tc = e.target.closest(".t-c[data-f]");
+  if (tc) {
+    const f = tc.dataset.f;
+    rosterStFilter = (rosterStFilter === f || f === "") ? "" : f;
+    renderRoster();
+    return;
+  }
+  const b = e.target.closest(".seg button");
+  if (b) {
+    if (navigator.vibrate) navigator.vibrate(12);
+    setStatus(b.closest(".seg").dataset.sid, b.dataset.st);
+    return;
+  }
+  const nm = e.target.closest(".rname");
+  if (nm) {
+    const row = nm.closest(".roster-item[data-sid]");
+    if (row) openStudentReport(row.dataset.sid, (nm.querySelector("b") || {}).textContent || "");
+  }
 });
 
 async function fillRemaining(status) {
