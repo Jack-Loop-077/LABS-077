@@ -319,9 +319,6 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
 .theme-btn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;flex:none}
 .theme-btn svg{width:18px;height:18px}
 
-/* الإنذار المبكر */
-.warn-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-inline-start:4px solid var(--no);border-radius:12px;padding:9px 12px;margin-bottom:8px;cursor:pointer}
-.warn-item .rate{font-family:'Alexandria';font-weight:800;color:var(--no);font-size:15px;min-width:48px;text-align:center;flex:none}
 
 
 /* كشف الطالب */
@@ -409,6 +406,7 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
           <div class="field"><label class="lbl">من تاريخ</label><input class="inp" type="date" id="rFrom"></div>
           <div class="field"><label class="lbl">إلى تاريخ</label><input class="inp" type="date" id="rTo"></div>
         </div>
+        <button class="btn btn-g btn-sm" id="btnTermRange" style="width:100%;margin-top:8px">تعبئة نطاق الفصل الحالي</button>
         <div class="grid g2" style="margin-top:10px">
           <div class="field"><label class="lbl">المرحلة</label><select class="sel" id="rStage"></select></div>
           <div class="field"><label class="lbl">المادة</label><select class="sel" id="rSubject"></select></div>
@@ -445,6 +443,7 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
         </div>
         <select class="sel" id="stStage"></select>
         <select class="sel" id="stLab"></select>
+        <select class="sel" id="stStatus"><option value="active">الفعّالون</option><option value="grad">الخريجون 🎓</option><option value="all">الكل</option></select>
       </div>
       <div id="stBody"></div>
     </section>
@@ -473,17 +472,16 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
       </div>
 
       <div class="card">
-        <h2 style="color:var(--no)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>الإنذار المبكر للغياب</h2>
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>الفصول الدراسية</h2>
+        <div id="termList"></div>
+        <div class="divider"></div>
+        <p class="sec-title">إضافة فصل</p>
         <div class="grid g3">
-          <div class="field"><label class="lbl">من تاريخ</label><input class="inp" type="date" id="alFrom"></div>
-          <div class="field"><label class="lbl">حد الغياب ٪</label><input class="inp" type="number" id="alPct" min="1" max="100" value="15" inputmode="numeric"></div>
-          <div class="field"><label class="lbl">المجاز</label><select class="sel" id="alEx"><option value="no">لا يُحسب غياباً</option><option value="yes">يُحسب غياباً</option></select></div>
+          <div class="field"><label class="lbl">الاسم</label><input class="inp" id="tmName" placeholder="الفصل الأول 2025-2026"></div>
+          <div class="field"><label class="lbl">من</label><input class="inp" type="date" id="tmFrom"></div>
+          <div class="field"><label class="lbl">إلى</label><input class="inp" type="date" id="tmTo"></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-p" id="btnAlertRun" style="flex:1">فحص الآن</button>
-          <button class="btn btn-g" id="btnAlertExport" style="flex:1" disabled>تصدير كشف الإنذارات</button>
-        </div>
-        <div id="alertList" style="margin-top:13px"></div>
+        <button class="btn btn-p" id="btnAddTerm" style="width:100%;margin-top:10px">إضافة الفصل</button>
       </div>
 
       <div class="card">
@@ -499,6 +497,17 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
       <div class="card">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>القوائم — المراحل والشعب والمختبرات</h2>
         <div id="listsBody"></div>
+      </div>
+
+      <div class="card">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>الترحيل — نهاية السنة</h2>
+        <p class="hint" style="margin-bottom:10px">صعّد دفعة كاملة مرحلة فوق، وآخر مرحلة تتخرج 🎓 — الخريجون يبقون بالنظام (فلتر «الخريجون» بتبويب الطلاب) بكل سجلاتهم، وتكدر ترجّع أي واحد فعالاً من تعديل بياناته.</p>
+        <div class="grid g2">
+          <div class="field"><label class="lbl">النوع</label><select class="sel" id="prMode"><option value="all">ترحيل الكل خطوة وحدة</option><option value="one">مرحلة محددة</option></select></div>
+          <div class="field" id="prStageF"><label class="lbl">المرحلة</label><select class="sel" id="prStage"></select></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label class="lbl">وسم دفعة التخرج</label><input class="inp" id="prYear"></div>
+        <button class="btn btn-p" id="btnPromote" style="width:100%;margin-top:12px">معاينة وتنفيذ الترحيل</button>
       </div>
 
       <div class="card">
@@ -739,6 +748,7 @@ function onDataChange() {
   renderSubjects();
   renderLists();
   renderOverview();
+  renderTerms();
 }
 
 /* ---------- التنقل ---------- */
@@ -784,6 +794,7 @@ function fillPickers() {
   fillSelect($("#stLab"), settings.labs, $("#stLab").value, "كل المختبرات");
   // إدارة المواد
   fillSelect($("#subStage"), settings.stages, $("#subStage").value || settings.stages[0] || "", null);
+  fillSelect($("#prStage"), settings.stages, $("#prStage").value || settings.stages[0] || "", null);
 }
 function fillSubjectSel() {
   const list = subjects.filter(s => s.stage === sel.stage);
@@ -830,7 +841,7 @@ function subscribeAtt() {
 
 function rosterStudents() {
   return students.filter(s =>
-    s.stage === sel.stage && s.lab === sel.lab && (!sel.section || s.section === sel.section));
+    !s.graduate && s.stage === sel.stage && s.lab === sel.lab && (!sel.section || s.section === sel.section));
 }
 
 function renderAttend() {
@@ -891,9 +902,12 @@ function renderRoster() {
 
   const subj = subjects.find(s => s.id === sel.subjectId);
   const tdy = todayStr();
-  const rel = sel.date === tdy ? "" :
+  let rel = sel.date === tdy ? "" :
     '<span class="t-date" style="background:rgba(252,211,77,.22);border:1px solid rgba(252,211,77,.55)">' +
     (sel.date > tdy ? "⚠ تاريخ مستقبلي" : "تعديل يوم سابق ✎") + "</span>";
+  const _tm = getCurrentTerm();
+  if (_tm && (sel.date < _tm.from || sel.date > _tm.to))
+    rel += '<span class="t-date" style="background:rgba(241,112,112,.25);border:1px solid rgba(241,112,112,.6)">خارج الفصل الحالي</span>';
   $("#ticket").innerHTML =
     '<div class="t-head"><span>' + esc(subj ? subj.name : "") + '</span><span class="sep">•</span><span>' +
     esc(sel.stage) + '</span><span class="sep">•</span><span>' + esc(sel.lab) +
@@ -1012,7 +1026,7 @@ function openGuestPicker() {
   const list = wrap.querySelector("#gList"), inp = wrap.querySelector("#gSearch");
   function draw() {
     const t = inp.value.trim();
-    const items = students.filter(s => s.stage === sel.stage && s.lab !== sel.lab &&
+    const items = students.filter(s => !s.graduate && s.stage === sel.stage && s.lab !== sel.lab &&
       !attRecords.has(s.id) && (!t || s.name.includes(t)));
     list.innerHTML = items.length ? items.slice(0, 60).map(s =>
       '<button class="st" style="width:100%;text-align:right" data-id="' + esc(s.id) + '">' +
@@ -1034,7 +1048,6 @@ function openGuestPicker() {
 /* ═══════════════ سجل الحضور ═══════════════ */
 let recRows = [], recLoading = false;
 $("#rFrom").value = todayStr(); $("#rTo").value = todayStr();
-$("#alFrom").value = new Date(Date.now() - 90 * 864e5).toLocaleDateString("en-CA");
 
 async function loadRecords() {
   if (!db || !user) return;
@@ -1154,6 +1167,18 @@ async function exportStyledXLSX(filename, sheets) {
     t.font = { name: "Calibri", size: 15, bold: true, color: { argb: XLC.brand } };
     t.alignment = { horizontal: "center", vertical: "middle" };
     ws.getRow(R).height = 30; R++;
+    /* الواجهة الثابتة (معلومات الكشف) */
+    if (sh.info) {
+      sh.info.forEach(line => {
+        ws.mergeCells(R, 1, R, n);
+        const c = ws.getCell(R, 1);
+        c.value = line;
+        c.font = { name: "Calibri", size: 11, bold: true, color: { argb: XLC.ink } };
+        c.alignment = { horizontal: "center", vertical: "middle" };
+        ws.getRow(R).height = 21;
+        R++;
+      });
+    }
     /* سطر المعلومات */
     if (sh.meta) {
       ws.mergeCells(R, 1, R, n);
@@ -1240,93 +1265,67 @@ const recRowObj = r => ({ date: r.date, name: r.studentName, stage: r.stage, sec
   lab: r.lab, slab: r.sessionLab || r.lab, subject: r.subjectName, status: stTxt(r.status) });
 const stRowObj = s => ({ name: s.name, stage: s.stage, section: s.section || "", lab: s.lab });
 
-/* كشوفات مصفوفة: طلاب × تواريخ، ورقة لكل مادة */
-function buildMatrixSheets(rows) {
-  const bySub = new Map();
-  rows.forEach(r => {
-    const k = r.subjectId || r.subjectName || "؟";
-    if (!bySub.has(k)) bySub.set(k, { name: r.subjectName || "مادة", list: [] });
-    bySub.get(k).list.push(r);
-  });
-  const SYM = { present: "✓", absent: "✕", excused: "م" };
-  const sheets = [];
-  [...bySub.values()].slice(0, 8).forEach(g => {
-    const dates = [...new Set(g.list.map(r => r.date))].sort();
-    if (!dates.length) return;
-    const stu = new Map();
-    g.list.forEach(r => {
-      if (!stu.has(r.studentId)) stu.set(r.studentId, { name: r.studentName || "؟", lab: r.lab || "", sec: r.section || "", m: {} });
-      stu.get(r.studentId).m[r.date] = r.status;
-    });
-    const cols = [
-      { header: "اسم الطالب", key: "name", width: 26, align: "right" },
-      { header: "المختبر", key: "lab", width: 10 },
-      { header: "الشعبة", key: "sec", width: 7 }
-    ];
-    dates.forEach((d, i) => cols.push({
-      header: Number(d.slice(8, 10)) + "/" + Number(d.slice(5, 7)),
-      key: "d" + i, width: 4.4, rotate: true, symbol: true
-    }));
-    cols.push(
-      { header: "حاضر", key: "tp", width: 7 },
-      { header: "غائب", key: "ta", width: 7 },
-      { header: "مجاز", key: "te", width: 7 },
-      { header: "النسبة", key: "pct", width: 8, numFmt: "0%" }
-    );
-    const rws = [...stu.values()].sort((a, b) => coll.compare(a.name, b.name)).map(s => {
-      const o = { name: s.name, lab: s.lab, sec: s.sec };
-      let p = 0, a = 0, e = 0;
-      dates.forEach((d, i) => {
-        const st = s.m[d];
-        o["d" + i] = st ? SYM[st] : "";
-        if (st === "present") p++; else if (st === "absent") a++; else if (st === "excused") e++;
-      });
-      o.tp = p; o.ta = a; o.te = e;
-      o.pct = (p + a + e) ? p / (p + a + e) : 0;
-      return o;
-    });
-    sheets.push({
-      name: "كشف " + g.name,
-      title: "كشف الحضور — " + g.name,
-      meta: "من " + dates[0] + " إلى " + dates[dates.length - 1] + "  •  " + rws.length + " طالب  •  " +
-        dates.length + " يوم  •  ✓ حاضر    ✕ غائب    م مجاز",
-      columns: cols, rows: rws,
-      landscape: true, rotateDates: true, xSplit: 3, tab: "FF7C3AED"
-    });
-  });
-  return sheets;
-}
-
 $("#btnRExport").onclick = async function () {
+  const stg = $("#rStage").value, sub = $("#rSubject").value, lb = $("#rLab").value;
+  if (!stg || !sub || !lb) { toast("حدد مرحلة ومادة ومختبراً واحداً بالفلاتر قبل التصدير", "err"); return; }
   const rows = filteredRecords();
-  if (!rows.length) { toast("لا توجد سجلات للتصدير", "err"); return; }
+  if (!rows.length) { toast("لا توجد سجلات ضمن هذه الفلاتر", "err"); return; }
+  let sec = $("#rSection").value;
+  if (!sec) {
+    const secs = [...new Set(rows.map(r => r.section || ""))];
+    if (secs.length > 1) { toast("حدد شعبة واحدة بالفلاتر قبل التصدير", "err"); return; }
+    sec = secs[0] || "—";
+  }
+  const subjName = (subjects.find(x => x.id === sub) || {}).name || rows[0].subjectName || "";
+  const dates = [...new Set(rows.map(r => r.date))].sort();
+  const info1 = "المختبر: " + lb + "     |     المرحلة: " + stg + "     |     الشعبة: " + sec;
   this.disabled = true;
   try {
-    const c = { present: 0, absent: 0, excused: 0 };
-    rows.forEach(r => c[r.status] = (c[r.status] || 0) + 1);
-    const pct = Math.round(c.present / rows.length * 100);
-    const parts = [];
-    const stg = $("#rStage").value, sub = $("#rSubject").value, sec = $("#rSection").value,
-          lb = $("#rLab").value, txt = $("#rSearch").value.trim();
-    if (stg) parts.push(stg);
-    if (sub) { const s = subjects.find(x => x.id === sub); if (s) parts.push(s.name); }
-    if (sec) parts.push("شعبة " + sec);
-    if (lb) parts.push(lb);
-    if (txt) parts.push("بحث: " + txt);
-    const meta = "أُصدر في " + todayStr() + "  •  المدة: " + $("#rFrom").value + " ← " + $("#rTo").value +
-      (parts.length ? "  •  الفلاتر: " + parts.join("، ") : "  •  بدون فلاتر");
-    const summary = [
-      { label: "السجلات", value: rows.length },
-      { label: "حاضر", value: c.present, fg: XLC.ok, bg: XLC.okBg },
-      { label: "غائب", value: c.absent, fg: XLC.no, bg: XLC.noBg },
-      { label: "مجاز", value: c.excused, fg: XLC.ex, bg: XLC.exBg },
-      { label: "نسبة الحضور", value: pct + "٪", fg: XLC.brand, bg: "FFE3F1EF" }
-    ];
-    await exportStyledXLSX("حاضر - سجل الحضور " + $("#rFrom").value + " الى " + $("#rTo").value + ".xlsx",
-      [{ name: "سجل الحضور", title: "سجل الحضور التفصيلي", meta, summary,
-         columns: REC_COLS, rows: rows.map(recRowObj), statusKey: "status", tab: "FF0F766E" },
-       ...buildMatrixSheets(rows)]);
-    toast("صُدّر الملف: سجل تفصيلي + كشوفات بالتواريخ");
+    let sheet;
+    if (dates.length <= 1) {
+      const d = dates[0] || $("#rFrom").value;
+      const list = rows.slice().sort((a, b) => coll.compare(a.studentName || "", b.studentName || ""));
+      sheet = {
+        name: "كشف الحضور", title: "كشف الحضور",
+        info: [info1, "المادة: " + subjName + "     |     التاريخ: " + fmtDate(d) + " — " + d],
+        meta: "أُصدر في " + todayStr() + "  •  " + list.length + " طالب",
+        columns: [
+          { header: "ت", key: "i", width: 5 },
+          { header: "اسم الطالب", key: "name", width: 34, align: "right" },
+          { header: "الحالة", key: "st", width: 12 }
+        ],
+        rows: list.map((r, i) => ({ i: i + 1, name: r.studentName, st: stTxt(r.status) })),
+        statusKey: "st", tab: "FF0F766E"
+      };
+    } else {
+      const stu = new Map();
+      rows.forEach(r => {
+        if (!stu.has(r.studentId)) stu.set(r.studentId, { name: r.studentName || "؟", m: {} });
+        stu.get(r.studentId).m[r.date] = stTxt(r.status);
+      });
+      const cols = [
+        { header: "ت", key: "i", width: 5 },
+        { header: "اسم الطالب", key: "name", width: 34, align: "right" }
+      ];
+      dates.forEach((d, i) => cols.push({
+        header: Number(d.slice(8, 10)) + "/" + Number(d.slice(5, 7)),
+        key: "d" + i, width: 8.5, symbol: true
+      }));
+      const list = [...stu.values()].sort((a, b) => coll.compare(a.name, b.name)).map((s, i) => {
+        const o = { i: i + 1, name: s.name };
+        dates.forEach((d, j) => o["d" + j] = s.m[d] || "");
+        return o;
+      });
+      sheet = {
+        name: "كشف الحضور", title: "كشف الحضور",
+        info: [info1, "المادة: " + subjName],
+        meta: "أُصدر في " + todayStr() + "  •  من " + dates[0] + " إلى " + dates[dates.length - 1] + "  •  " + list.length + " طالب  •  " + dates.length + " يوم",
+        columns: cols, rows: list,
+        landscape: dates.length > 6, xSplit: 2, tab: "FF0F766E"
+      };
+    }
+    await exportStyledXLSX("حاضر - كشف " + subjName + " " + (dates.length <= 1 ? (dates[0] || $("#rFrom").value) : dates[0] + " الى " + dates[dates.length - 1]) + ".xlsx", [sheet]);
+    toast("صُدّر الكشف");
   } catch (e) { toast("تعذّر التصدير", "err"); }
   this.disabled = false;
 };
@@ -1347,12 +1346,14 @@ $("#btnStExport").onclick = async function () {
 };
 
 /* ═══════════════ الطلاب ═══════════════ */
-["stSearch", "stStage", "stLab"].forEach(id =>
+["stSearch", "stStage", "stLab", "stStatus"].forEach(id =>
   $("#" + id).addEventListener(id === "stSearch" ? "input" : "change", renderStudents));
 
 function filteredStudents() {
-  const t = $("#stSearch").value.trim(), st = $("#stStage").value, lb = $("#stLab").value;
-  return students.filter(s => (!t || s.name.includes(t)) && (!st || s.stage === st) && (!lb || s.lab === lb));
+  const t = $("#stSearch").value.trim(), st = $("#stStage").value, lb = $("#stLab").value, stt = $("#stStatus").value;
+  return students.filter(s =>
+    (!t || s.name.includes(t)) && (!st || s.stage === st) && (!lb || s.lab === lb) &&
+    (stt === "all" || (stt === "grad" ? !!s.graduate : !s.graduate)));
 }
 function renderStudents() {
   const box = $("#stBody"); if (!box) return;
@@ -1368,7 +1369,9 @@ function renderStudents() {
     '<div class="smain"><b>' + esc(s.name) + '</b><div class="meta">' +
     '<span class="tag t-stage">' + esc(s.stage) + "</span>" +
     (s.section ? '<span class="tag">شعبة ' + esc(s.section) + "</span>" : "") +
-    '<span class="tag t-lab">' + esc(s.lab) + "</span></div></div>" +
+    '<span class="tag t-lab">' + esc(s.lab) + "</span>" +
+    (s.graduate ? '<span class="tag" style="color:var(--ex);border-color:transparent;background:var(--ex-soft)">خريج' + (s.gradYear ? " " + esc(s.gradYear) : "") + "</span>" : "") +
+    "</div></div>" +
     '<button class="btn btn-ic btn-g" data-edit="' + esc(s.id) + '" title="تعديل">' + ICO.pen + "</button>" +
     '<button class="btn btn-ic btn-g" data-rm="' + esc(s.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + "</button></div>"
   ).join("");
@@ -1396,10 +1399,12 @@ function studentModal(s) {
     '<div class="field"><label class="lbl">المرحلة</label><select class="sel" id="fStage"></select></div>' +
     '<div class="field"><label class="lbl">الشعبة</label><select class="sel" id="fSection"></select></div>' +
     '<div class="field"><label class="lbl">المختبر</label><select class="sel" id="fLab"></select></div></div>' +
-    (s ? '<p class="hint" style="margin-top:11px">تعديل بيانات الطالب لا يغيّر سجلات حضوره القديمة — تبقى محفوظة كما سُجّلت بتاريخها.</p>' : '');
+    (s ? '<div class="field" style="margin-top:10px"><label class="lbl">الحالة</label><select class="sel" id="fGrad"><option value="active">طالب فعال</option><option value="grad">خريج 🎓</option></select></div>' +
+         '<p class="hint" style="margin-top:11px">تعديل بيانات الطالب لا يغيّر سجلات حضوره القديمة — تبقى محفوظة كما سُجّلت بتاريخها.</p>' : '');
   fillSelect(wrap.querySelector("#fStage"), settings.stages, s ? s.stage : (sel.stage || settings.stages[0] || ""), null);
   fillSelect(wrap.querySelector("#fSection"), settings.sections, s ? (s.section || "") : (sel.section || ""), "بدون شعبة");
   fillSelect(wrap.querySelector("#fLab"), settings.labs, s ? s.lab : (sel.lab || settings.labs[0] || ""), null);
+  if (s) wrap.querySelector("#fGrad").value = s.graduate ? "grad" : "active";
   openModal({
     title: s ? "تعديل طالب" : "إضافة طالب",
     body: wrap,
@@ -1410,7 +1415,7 @@ function studentModal(s) {
         const stage = wrap.querySelector("#fStage").value, section = wrap.querySelector("#fSection").value, lab = wrap.querySelector("#fLab").value;
         if (!name) { toast("اكتب اسم الطالب", "err"); return; }
         if (!stage || !lab) { toast("حدّد المرحلة والمختبر", "err"); return; }
-        const exDup = !s ? students.find(x => x.name === name) : null;
+        const exDup = !s ? students.find(x => !x.graduate && x.name === name) : null;
         if (exDup && !btn.dataset.warned) {
           btn.dataset.warned = "1";
           btn.classList.remove("btn-p"); btn.classList.add("btn-d");
@@ -1420,7 +1425,7 @@ function studentModal(s) {
         }
         btn.disabled = true;
         try {
-          if (s) await updateDoc(doc(db, "students", s.id), { name, stage, section, lab });
+          if (s) await updateDoc(doc(db, "students", s.id), { name, stage, section, lab, graduate: wrap.querySelector("#fGrad").value === "grad" });
           else await addDoc(collection(db, "students"), { name, stage, section, lab, createdAt: serverTimestamp() });
           closeModal(); toast(s ? "حُفظ التعديل" : "أُضيف الطالب: " + name);
         } catch (err) { toast("تعذّر الحفظ: " + err.code, "err"); btn.disabled = false; }
@@ -1479,7 +1484,7 @@ function importPreview(items) {
   const newVals = { stages: new Set(), sections: new Set(), labs: new Set() };
   items.forEach(it => {
     it.err = !it.stage || !it.lab ? "ناقص مرحلة أو مختبر" : "";
-    const ex = students.find(x => x.name === it.name);
+    const ex = students.find(x => !x.graduate && x.name === it.name);
     it.exist = ex || null;
     it.same = !!(ex && !it.err && ex.stage === it.stage && (ex.section || "") === (it.section || "") && ex.lab === it.lab);
     it.conflict = !!(ex && !it.same && !it.err);
@@ -1719,23 +1724,22 @@ $("#listsBody").addEventListener("keydown", e => {
 /* ═══════════════ نظرة عامة وإحصائيات ═══════════════ */
 function renderOverview() {
   const el = $("#ovLocal"); if (!el) return;
+  const nAct = students.filter(s => !s.graduate).length;
   el.innerHTML =
-    '<div class="sum"><b>' + students.length + '</b><span>طالب</span></div>' +
+    '<div class="sum"><b>' + nAct + '</b><span>طالب فعال</span></div>' +
+    '<div class="sum e"><b>' + (students.length - nAct) + '</b><span>خريج</span></div>' +
     '<div class="sum"><b>' + subjects.length + '</b><span>مادة</span></div>' +
-    '<div class="sum"><b>' + settings.labs.length + '</b><span>مختبر</span></div>' +
-    '<div class="sum"><b>' + settings.sections.length + '</b><span>شعبة</span></div>';
+    '<div class="sum"><b>' + settings.labs.length + '</b><span>مختبر</span></div>';
   const box = $("#ovStages");
   if (!settings.stages.length || !students.length) {
     box.innerHTML = '<p class="hint">ماكو بيانات كافية بعد.</p>';
   } else {
-    const counts = settings.stages.map(st => students.filter(s => s.stage === st).length);
+    const counts = settings.stages.map(st => students.filter(s => !s.graduate && s.stage === st).length);
     const mx = Math.max(1, ...counts);
     box.innerHTML = settings.stages.map((st, i) =>
       '<div class="ov-row"><b>' + esc(st) + '</b><span class="ov-bar"><i style="width:' +
       Math.round(counts[i] / mx * 100) + '%"></i></span><span class="cnt">' + counts[i] + '</span></div>').join("");
   }
-  const ap = $("#alPct"); if (ap && document.activeElement !== ap && settings.alertPct) ap.value = settings.alertPct;
-  const ae = $("#alEx"); if (ae && document.activeElement !== ae && settings.alertExcused) ae.value = settings.alertExcused;
 }
 let ovLoaded = false;
 async function loadServerStats(force) {
@@ -1940,78 +1944,6 @@ $("#btnWipeAll").onclick = async function () {
   this.disabled = false; this.textContent = old;
 };
 
-/* ═══════════════ الإنذار المبكر للغياب ═══════════════ */
-let alertRows = [];
-async function runAlerts() {
-  const btn = $("#btnAlertRun"), box = $("#alertList");
-  const from = $("#alFrom").value || new Date(Date.now() - 90 * 864e5).toLocaleDateString("en-CA");
-  const pct = Math.max(1, Math.min(100, parseInt($("#alPct").value) || 15));
-  const exAsAbs = $("#alEx").value === "yes";
-  settings.alertPct = pct; settings.alertExcused = $("#alEx").value; saveLists();
-  btn.disabled = true; box.innerHTML = '<div class="skel"></div><div class="skel"></div>';
-  try {
-    const snap = await getDocs(query(collection(db, "attendance"), where("date", ">=", from)));
-    const map = new Map();
-    snap.docs.forEach(d => {
-      const r = d.data();
-      const k = r.studentId + "|" + r.subjectId;
-      if (!map.has(k)) map.set(k, { sid: r.studentId, name: r.studentName, stage: r.stage, section: r.section || "", lab: r.lab, subject: r.subjectName, p: 0, a: 0, e: 0 });
-      const g = map.get(k);
-      if (r.status === "present") g.p++; else if (r.status === "absent") g.a++; else if (r.status === "excused") g.e++;
-    });
-    alertRows = [...map.values()].map(g => {
-      const total = g.p + g.a + g.e;
-      const misses = g.a + (exAsAbs ? g.e : 0);
-      return { ...g, total, misses, rate: total ? misses / total : 0 };
-    }).filter(g => g.total >= 3 && g.rate * 100 >= pct)
-      .sort((x, y) => y.rate - x.rate);
-    if (!alertRows.length) {
-      box.innerHTML = '<div class="empty"><p>ولا طالب تجاوز ' + pct + '٪ ضمن هذه المدة ✅<br><span class="hint">(يُشترط 3 جلسات على الأقل للطالب بالمادة حتى تنحسب نسبته)</span></p></div>';
-    } else {
-      box.innerHTML = '<p class="hint" style="margin-bottom:8px">' + alertRows.length + ' حالة تجاوزت حد ' + pct + '٪</p>' +
-        alertRows.map(g =>
-          '<div class="warn-item" data-sid="' + esc(g.sid || "") + '"><div style="flex:1;min-width:0"><b style="font-size:14px">' + esc(g.name) + '</b>' +
-          '<div style="font-size:11px;color:var(--mut);display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">' +
-          '<span>' + esc(g.subject) + '</span><span>•</span><span>' + esc(g.stage) + '</span><span>•</span><span>' + esc(g.lab) + '</span>' +
-          '<span>•</span><span>غاب <b style="color:var(--no)">' + g.misses + '</b> من ' + g.total + ' جلسة</span>' +
-          '</div></div><span class="rate">' + Math.round(g.rate * 100) + '٪</span></div>').join("");
-    }
-    $("#btnAlertExport").disabled = !alertRows.length;
-  } catch (e) { box.innerHTML = '<p class="hint">تعذّر الفحص: ' + esc(e.code || e.message || "") + '</p>'; }
-  btn.disabled = false;
-}
-$("#btnAlertRun").onclick = runAlerts;
-$("#alertList").addEventListener("click", e => {
-  const w = e.target.closest(".warn-item[data-sid]");
-  if (w && w.dataset.sid) openStudentReport(w.dataset.sid);
-});
-$("#btnAlertExport").onclick = async function () {
-  if (!alertRows.length) return;
-  this.disabled = true;
-  try {
-    const pct = settings.alertPct || 15;
-    await exportStyledXLSX("حاضر - إنذارات الغياب " + todayStr() + ".xlsx", [{
-      name: "إنذارات الغياب",
-      title: "كشف الإنذار المبكر — نسبة الغياب ≥ " + pct + "٪",
-      meta: "أُصدر في " + todayStr() + "  •  من " + $("#alFrom").value + "  •  المجاز " + ($("#alEx").value === "yes" ? "يُحسب غياباً" : "لا يُحسب غياباً") + "  •  " + alertRows.length + " حالة",
-      columns: [
-        { header: "اسم الطالب", key: "name", width: 28, align: "right" },
-        { header: "المرحلة", key: "stage", width: 15 },
-        { header: "الشعبة", key: "section", width: 8 },
-        { header: "المختبر", key: "lab", width: 11 },
-        { header: "المادة", key: "subject", width: 20 },
-        { header: "الجلسات", key: "total", width: 9 },
-        { header: "حاضر", key: "p", width: 8 },
-        { header: "غائب", key: "a", width: 8 },
-        { header: "مجاز", key: "e", width: 8 },
-        { header: "نسبة الغياب", key: "rate", width: 12, numFmt: "0%" }
-      ],
-      rows: alertRows, tab: "FFB91C1C"
-    }]);
-  } catch (e) { toast("تعذّر التصدير", "err"); }
-  this.disabled = false;
-};
-
 /* ═══════════════ الرسوم البيانية (Chart.js كسول) ═══════════════ */
 let _charts = [];
 $("#btnCharts").onclick = async function () {
@@ -2071,15 +2003,17 @@ async function openStudentReport(sid, fbName) {
   const wrap = document.createElement("div");
   wrap.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
   openModal({ title: "كشف الطالب", body: wrap, actions: [] });
-  let recs = [];
+  let recsAll = [];
   try {
     const snap = await getDocs(query(collection(db, "attendance"), where("studentId", "==", sid)));
-    recs = snap.docs.map(d => d.data());
+    recsAll = snap.docs.map(d => d.data());
   } catch (e) {
     wrap.innerHTML = '<p class="hint">تعذّر جلب السجلات: ' + esc(e.code || e.message || "") + '</p>';
     return;
   }
-  const name = s ? s.name : (fbName || (recs[0] && recs[0].studentName) || "؟");
+  const name = s ? s.name : (fbName || (recsAll[0] && recsAll[0].studentName) || "؟");
+  const term = getCurrentTerm();
+  let useTerm = !!term;
   const exAsAbs = (settings.alertExcused || "no") === "yes";
   const base = settings.alertPct || 15;
   const T = { t: Math.max(1, Math.round(base / 3)), w: Math.max(2, Math.round(base * 2 / 3)), f: base };
@@ -2090,88 +2024,233 @@ async function openStudentReport(sid, fbName) {
     if (pc >= T.t) return ["تنبيه", "lvl-warn"];
     return ["سليم", "lvl-ok"];
   };
-  const map = new Map();
-  recs.forEach(r => {
-    const k = r.subjectId || r.subjectName;
-    if (!map.has(k)) map.set(k, { subject: r.subjectName || "مادة", p: 0, a: 0, e: 0 });
-    const g = map.get(k);
-    if (r.status === "present") g.p++; else if (r.status === "absent") g.a++; else if (r.status === "excused") g.e++;
-  });
-  const subs = [...map.values()].map(g => {
-    const total = g.p + g.a + g.e;
-    const m = g.a + (exAsAbs ? g.e : 0);
-    return { ...g, total, m, rate: total ? m / total : 0, lvlTxt: "" };
-  }).sort((x, y) => y.rate - x.rate);
-  subs.forEach(g => g.lvlTxt = lvl(g.rate)[0]);
-  const tot = subs.reduce((o, g) => ({ p: o.p + g.p, a: o.a + g.a, e: o.e + g.e }), { p: 0, a: 0, e: 0 });
-  const totalAll = tot.p + tot.a + tot.e;
-  const rateAll = totalAll ? (tot.a + (exAsAbs ? tot.e : 0)) / totalAll : 0;
 
-  let h =
-    '<div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">' +
-    '<span class="avatar" style="width:46px;height:46px;font-size:18px">' + esc((name || "؟").trim()[0] || "؟") + '</span>' +
-    '<div style="flex:1;min-width:0"><b style="font-size:16px">' + esc(name) + '</b>' +
-    '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">' +
-    (s ? '<span class="tag t-stage">' + esc(s.stage) + '</span>' + (s.section ? '<span class="tag">شعبة ' + esc(s.section) + '</span>' : '') + '<span class="tag t-lab">' + esc(s.lab) + '</span>'
-       : '<span class="tag">طالب محذوف — الكشف من سجلاته</span>') +
-    '</div></div></div>';
-  if (!recs.length) {
-    wrap.innerHTML = h + '<div class="empty">' + ICO.empty + '<p>ماكو أي سجل حضور لهذا الطالب بعد.</p></div>';
+  function render() {
+    const recs = useTerm ? recsAll.filter(r => r.date >= term.from && r.date <= term.to) : recsAll;
+    let h =
+      '<div style="display:flex;align-items:center;gap:11px;margin-bottom:10px">' +
+      '<span class="avatar" style="width:46px;height:46px;font-size:18px">' + esc((name || "؟").trim()[0] || "؟") + '</span>' +
+      '<div style="flex:1;min-width:0"><b style="font-size:16px">' + esc(name) + '</b>' +
+      '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">' +
+      (s ? '<span class="tag t-stage">' + esc(s.stage) + '</span>' +
+           (s.section ? '<span class="tag">شعبة ' + esc(s.section) + '</span>' : '') +
+           '<span class="tag t-lab">' + esc(s.lab) + '</span>' +
+           (s.graduate ? '<span class="tag" style="color:var(--ex);background:var(--ex-soft);border-color:transparent">خريج' + (s.gradYear ? " " + esc(s.gradYear) : "") + '</span>' : '')
+         : '<span class="tag">طالب محذوف — الكشف من سجلاته</span>') +
+      '</div></div></div>';
+    if (term) {
+      h += '<p class="hint" style="margin-bottom:10px">النطاق: <b>' + (useTerm ? esc(term.name) : "كل التاريخ") + '</b>' +
+        (useTerm ? ' (' + esc(term.from) + ' ← ' + esc(term.to) + ')' : '') +
+        ' — <a href="#" id="repScope" style="color:var(--prim);font-weight:700;text-decoration:none">' +
+        (useTerm ? "عرض كل التاريخ" : "عرض الفصل الحالي") + '</a></p>';
+    }
+    if (!recs.length) {
+      wrap.innerHTML = h + '<div class="empty">' + ICO.empty + '<p>ماكو سجلات حضور ' +
+        (useTerm ? 'ضمن ' + esc(term.name) : 'لهذا الطالب بعد') + '.</p></div>';
+      const sc0 = wrap.querySelector("#repScope");
+      if (sc0) sc0.onclick = ev => { ev.preventDefault(); useTerm = !useTerm; render(); };
+      return;
+    }
+    const map = new Map();
+    recs.forEach(r => {
+      const k = r.subjectId || r.subjectName;
+      if (!map.has(k)) map.set(k, { subject: r.subjectName || "مادة", p: 0, a: 0, e: 0 });
+      const g = map.get(k);
+      if (r.status === "present") g.p++; else if (r.status === "absent") g.a++; else if (r.status === "excused") g.e++;
+    });
+    const subs = [...map.values()].map(g => {
+      const total = g.p + g.a + g.e;
+      const m = g.a + (exAsAbs ? g.e : 0);
+      return { ...g, total, m, rate: total ? m / total : 0, lvlTxt: "" };
+    }).sort((x, y) => y.rate - x.rate);
+    subs.forEach(g => g.lvlTxt = lvl(g.rate)[0]);
+    const tot = subs.reduce((o, g) => ({ p: o.p + g.p, a: o.a + g.a, e: o.e + g.e }), { p: 0, a: 0, e: 0 });
+    const totalAll = tot.p + tot.a + tot.e;
+    const rateAll = totalAll ? (tot.a + (exAsAbs ? tot.e : 0)) / totalAll : 0;
+
+    h += '<div class="summary">' +
+      '<div class="sum"><b>' + totalAll + '</b><span>جلسة</span></div>' +
+      '<div class="sum p"><b>' + tot.p + '</b><span>حاضر</span></div>' +
+      '<div class="sum a"><b>' + tot.a + '</b><span>غائب</span></div>' +
+      '<div class="sum e"><b>' + tot.e + '</b><span>مجاز</span></div>' +
+      '<div class="sum"><b>' + Math.round(rateAll * 100) + '٪</b><span>نسبة الغياب</span></div></div>' +
+      '<p class="hint" style="margin:2px 0 10px">الحدود: تنبيه ≥' + T.t + '٪ • إنذار ≥' + T.w + '٪ • إنذار نهائي ≥' + T.f +
+      '٪ — المجاز ' + (exAsAbs ? "يُحسب" : "لا يُحسب") + ' غياباً</p>';
+    h += subs.map(g => {
+      const L = lvl(g.rate), pc = Math.round(g.rate * 100);
+      return '<div class="rep-sub"><div class="rep-head"><b>' + esc(g.subject) + '</b><span class="lvl ' + L[1] + '">' + L[0] + '</span></div>' +
+        '<div class="rep-bar"><i style="width:' + Math.min(100, pc) + '%;background:' +
+        (pc >= T.f ? "var(--no)" : pc >= T.t ? "var(--ex)" : "var(--ok)") + '"></i></div>' +
+        '<div class="rep-stats"><span>غاب <b>' + g.m + '</b> من <b>' + g.total + '</b> (' + pc + '٪)</span>' +
+        '<span>حاضر <b>' + g.p + '</b></span><span>غائب <b>' + g.a + '</b></span><span>مجاز <b>' + g.e + '</b></span></div></div>';
+    }).join("");
+    const recent = recs.slice().sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 6);
+    h += '<p class="sec-title" style="margin-top:12px">آخر الجلسات</p>' + recent.map(r =>
+      '<div class="rec" style="padding:7px 10px"><div class="rmain"><b style="font-size:13px">' + esc(r.subjectName || "") +
+      '</b></div><span class="rdate">' + fmtDate(r.date) + '</span><i class="mini-st" style="background:var(--' +
+      (r.status === "present" ? "ok" : r.status === "absent" ? "no" : "ex") + ')">' + (STATUS[r.status] || { ico: "" }).ico + '</i></div>').join("");
+    h += '<button class="btn btn-g" id="repExport" style="width:100%;margin-top:12px">تصدير كشف الطالب Excel</button>';
+    wrap.innerHTML = h;
+    const sc = wrap.querySelector("#repScope");
+    if (sc) sc.onclick = ev => { ev.preventDefault(); useTerm = !useTerm; render(); };
+    wrap.querySelector("#repExport").onclick = async function () {
+      this.disabled = true;
+      try {
+        await exportStyledXLSX("حاضر - كشف " + name + " " + todayStr() + ".xlsx", [{
+          name: "كشف الطالب",
+          title: "كشف حضور الطالب — " + name,
+          meta: "أُصدر في " + todayStr() +
+            (s ? "  •  " + s.stage + (s.section ? "  •  شعبة " + s.section : "") + "  •  " + s.lab + (s.graduate ? "  •  خريج " + (s.gradYear || "") : "") : "") +
+            "  •  النطاق: " + (useTerm ? term.name : "كل التاريخ") +
+            "  •  الحدود: تنبيه ≥" + T.t + "٪ / إنذار ≥" + T.w + "٪ / نهائي ≥" + T.f + "٪",
+          summary: [
+            { label: "الجلسات", value: totalAll },
+            { label: "حاضر", value: tot.p, fg: XLC.ok, bg: XLC.okBg },
+            { label: "غائب", value: tot.a, fg: XLC.no, bg: XLC.noBg },
+            { label: "مجاز", value: tot.e, fg: XLC.ex, bg: XLC.exBg },
+            { label: "نسبة الغياب", value: Math.round(rateAll * 100) + "٪", fg: XLC.no, bg: XLC.noBg }
+          ],
+          columns: [
+            { header: "المادة", key: "subject", width: 24, align: "right" },
+            { header: "الجلسات", key: "total", width: 9 },
+            { header: "حاضر", key: "p", width: 8 },
+            { header: "غائب", key: "a", width: 8 },
+            { header: "مجاز", key: "e", width: 8 },
+            { header: "نسبة الغياب", key: "rate", width: 12, numFmt: "0%" },
+            { header: "التقييم", key: "lvlTxt", width: 13 }
+          ],
+          rows: subs, tab: "FFD97706"
+        }]);
+      } catch (e) { toast("تعذّر التصدير", "err"); }
+      this.disabled = false;
+    };
+  }
+  render();
+}
+
+/* ═══════════════ الفصول الدراسية ═══════════════ */
+function getCurrentTerm() {
+  const t = (settings.terms || []).find(x => x.id === settings.currentTermId);
+  return (t && t.from && t.to) ? t : null;
+}
+function renderTerms() {
+  const box = $("#termList"); if (!box) return;
+  const terms = (settings.terms || []).slice().sort((a, b) => (b.from || "").localeCompare(a.from || ""));
+  if (!terms.length) {
+    box.innerHTML = '<p class="hint">ماكو فصول بعد — أضف الفصل الحالي حتى تنضبط الكشوفات وكشف الطالب على مدته.</p>';
     return;
   }
-  h += '<div class="summary">' +
-    '<div class="sum"><b>' + totalAll + '</b><span>جلسة</span></div>' +
-    '<div class="sum p"><b>' + tot.p + '</b><span>حاضر</span></div>' +
-    '<div class="sum a"><b>' + tot.a + '</b><span>غائب</span></div>' +
-    '<div class="sum e"><b>' + tot.e + '</b><span>مجاز</span></div>' +
-    '<div class="sum"><b>' + Math.round(rateAll * 100) + '٪</b><span>نسبة الغياب</span></div></div>' +
-    '<p class="hint" style="margin:2px 0 10px">الحدود: تنبيه ≥' + T.t + '٪ • إنذار ≥' + T.w + '٪ • إنذار نهائي ≥' + T.f +
-    '٪ — المجاز ' + (exAsAbs ? "يُحسب" : "لا يُحسب") + ' غياباً <span style="opacity:.7">(تُضبط من كارد الإنذار المبكر)</span></p>';
-  h += subs.map(g => {
-    const L = lvl(g.rate), pc = Math.round(g.rate * 100);
-    return '<div class="rep-sub"><div class="rep-head"><b>' + esc(g.subject) + '</b><span class="lvl ' + L[1] + '">' + L[0] + '</span></div>' +
-      '<div class="rep-bar"><i style="width:' + Math.min(100, pc) + '%;background:' +
-      (pc >= T.f ? "var(--no)" : pc >= T.t ? "var(--ex)" : "var(--ok)") + '"></i></div>' +
-      '<div class="rep-stats"><span>غاب <b>' + g.m + '</b> من <b>' + g.total + '</b> (' + pc + '٪)</span>' +
-      '<span>حاضر <b>' + g.p + '</b></span><span>غائب <b>' + g.a + '</b></span><span>مجاز <b>' + g.e + '</b></span></div></div>';
+  box.innerHTML = terms.map(t => {
+    const cur = t.id === settings.currentTermId;
+    return '<div class="rec"' + (cur ? ' style="border-color:var(--prim)"' : '') + '><div class="rmain"><b>' + esc(t.name) +
+      (cur ? ' <span class="tag t-stage">الحالي</span>' : '') + '</b><span class="meta">' + esc(t.from) + ' ← ' + esc(t.to) + '</span></div>' +
+      (cur ? '' : '<button class="btn btn-sm btn-soft" data-tcur="' + esc(t.id) + '">تعيين كحالي</button>') +
+      '<button class="btn btn-ic btn-g" data-tdel="' + esc(t.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + '</button></div>';
   }).join("");
-  const recent = recs.slice().sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 6);
-  h += '<p class="sec-title" style="margin-top:12px">آخر الجلسات</p>' + recent.map(r =>
-    '<div class="rec" style="padding:7px 10px"><div class="rmain"><b style="font-size:13px">' + esc(r.subjectName || "") +
-    '</b></div><span class="rdate">' + fmtDate(r.date) + '</span><i class="mini-st" style="background:var(--' +
-    (r.status === "present" ? "ok" : r.status === "absent" ? "no" : "ex") + ')">' + (STATUS[r.status] || { ico: "" }).ico + '</i></div>').join("");
-  h += '<button class="btn btn-g" id="repExport" style="width:100%;margin-top:12px">تصدير كشف الطالب Excel</button>';
-  wrap.innerHTML = h;
-  wrap.querySelector("#repExport").onclick = async function () {
-    this.disabled = true;
-    try {
-      await exportStyledXLSX("حاضر - كشف " + name + " " + todayStr() + ".xlsx", [{
-        name: "كشف الطالب",
-        title: "كشف حضور الطالب — " + name,
-        meta: "أُصدر في " + todayStr() + (s ? "  •  " + s.stage + (s.section ? "  •  شعبة " + s.section : "") + "  •  " + s.lab : "") +
-          "  •  الحدود: تنبيه ≥" + T.t + "٪ / إنذار ≥" + T.w + "٪ / نهائي ≥" + T.f + "٪",
-        summary: [
-          { label: "الجلسات", value: totalAll },
-          { label: "حاضر", value: tot.p, fg: XLC.ok, bg: XLC.okBg },
-          { label: "غائب", value: tot.a, fg: XLC.no, bg: XLC.noBg },
-          { label: "مجاز", value: tot.e, fg: XLC.ex, bg: XLC.exBg },
-          { label: "نسبة الغياب", value: Math.round(rateAll * 100) + "٪", fg: XLC.no, bg: XLC.noBg }
-        ],
-        columns: [
-          { header: "المادة", key: "subject", width: 24, align: "right" },
-          { header: "الجلسات", key: "total", width: 9 },
-          { header: "حاضر", key: "p", width: 8 },
-          { header: "غائب", key: "a", width: 8 },
-          { header: "مجاز", key: "e", width: 8 },
-          { header: "نسبة الغياب", key: "rate", width: 12, numFmt: "0%" },
-          { header: "التقييم", key: "lvlTxt", width: 13 }
-        ],
-        rows: subs, tab: "FFD97706"
-      }]);
-    } catch (e) { toast("تعذّر التصدير", "err"); }
-    this.disabled = false;
-  };
 }
+$("#btnAddTerm").onclick = async () => {
+  const name = $("#tmName").value.trim(), from = $("#tmFrom").value, to = $("#tmTo").value;
+  if (!name || !from || !to) { toast("اكتب الاسم وحدد تاريخي البداية والنهاية", "err"); return; }
+  if (to < from) { toast("تاريخ النهاية قبل البداية!", "err"); return; }
+  const t = { id: "t" + Date.now(), name, from, to };
+  settings.terms = [...(settings.terms || []), t];
+  const first = !settings.currentTermId;
+  if (first) settings.currentTermId = t.id;
+  await saveLists();
+  $("#tmName").value = "";
+  toast("أُضيف الفصل" + (first ? " وعُيّن فصلاً حالياً" : ""));
+};
+$("#termList").addEventListener("click", async e => {
+  const c = e.target.closest("[data-tcur]"), d = e.target.closest("[data-tdel]");
+  if (c) {
+    settings.currentTermId = c.dataset.tcur;
+    await saveLists();
+    toast("تعيّن الفصل الحالي");
+    renderRoster();
+    return;
+  }
+  if (d) {
+    const t = (settings.terms || []).find(x => x.id === d.dataset.tdel);
+    if (!t) return;
+    if (!await confirmDlg("حذف فصل <b>" + esc(t.name) + "</b>؟<br><span class='hint'>سجلات الحضور ما تتأثر — فقط يختفي من القائمة.</span>")) return;
+    settings.terms = settings.terms.filter(x => x.id !== t.id);
+    if (settings.currentTermId === t.id) settings.currentTermId = "";
+    await saveLists();
+    toast("حُذف الفصل");
+  }
+});
+$("#btnTermRange").onclick = () => {
+  const t = getCurrentTerm();
+  if (!t) { toast("حدد الفصل الحالي من الإدارة أولاً", "err"); return; }
+  $("#rFrom").value = t.from;
+  $("#rTo").value = t.to > todayStr() ? todayStr() : t.to;
+  loadRecords();
+};
+
+/* ═══════════════ الترحيل ونهاية السنة ═══════════════ */
+$("#prMode").addEventListener("change", () => {
+  $("#prStageF").style.display = $("#prMode").value === "one" ? "" : "none";
+});
+$("#prStageF").style.display = "none";
+$("#prYear").value = (() => {
+  const d = new Date(), y = d.getFullYear();
+  return d.getMonth() >= 8 ? y + "-" + (y + 1) : (y - 1) + "-" + y;
+})();
+$("#btnPromote").onclick = () => {
+  const order = settings.stages;
+  if (!order.length) { toast("ماكو مراحل معرّفة", "err"); return; }
+  const gradTag = $("#prYear").value.trim();
+  const act = students.filter(s => !s.graduate);
+  let plan = [];
+  if ($("#prMode").value === "all") {
+    for (let i = order.length - 1; i >= 0; i--) {
+      const list = act.filter(s => s.stage === order[i]);
+      if (list.length) plan.push({ from: order[i], to: i === order.length - 1 ? null : order[i + 1], list });
+    }
+  } else {
+    const st = $("#prStage").value, i = order.indexOf(st);
+    if (i < 0) { toast("اختر المرحلة", "err"); return; }
+    const list = act.filter(s => s.stage === st);
+    if (!list.length) { toast("ماكو طلاب فعالون بهذه المرحلة", "err"); return; }
+    plan = [{ from: st, to: i === order.length - 1 ? null : order[i + 1], list }];
+  }
+  if (!plan.length) { toast("ماكو طلاب للترحيل", "err"); return; }
+  const total = plan.reduce((s, p) => s + p.list.length, 0);
+  const body = '<p style="font-size:14px;margin-bottom:10px">راح يُرحَّل <b>' + total + '</b> طالباً حسب ترتيب المراحل بالقوائم:</p>' +
+    plan.map(p => '<div class="rec" style="padding:8px 11px"><div class="rmain"><b style="font-size:13px">' + esc(p.from) +
+      ' ← ' + (p.to ? esc(p.to) : 'تخريج 🎓 دفعة ' + esc(gradTag || "—")) + '</b></div><span class="chip"><b>' + p.list.length + '</b></span></div>').join("") +
+    '<p class="hint" style="margin-top:10px">سجلات الحضور القديمة تبقى على مراحلها كما سُجّلت (تاريخ صحيح). الخريجون يظلون بالنظام ضمن فلتر «الخريجون» ويرجعون فعالين بأي وقت من تعديل بياناتهم.</p>';
+  openModal({
+    title: "تأكيد الترحيل",
+    body,
+    actions: [
+      { label: "إلغاء", cls: "btn-g", onClick: closeModal },
+      { label: "تنفيذ الترحيل", cls: "btn-p", onClick: async btn => {
+        btn.disabled = true;
+        try {
+          let done = 0;
+          for (const p of plan) {
+            for (let i = 0; i < p.list.length; i += 400) {
+              const b = writeBatch(db);
+              p.list.slice(i, i + 400).forEach(s => {
+                b.update(doc(db, "students", s.id),
+                  p.to ? { stage: p.to } : { graduate: true, gradYear: gradTag, gradAt: serverTimestamp() });
+              });
+              await b.commit();
+              done += Math.min(400, p.list.length - i);
+              btn.textContent = "جارٍ الترحيل " + done + "/" + total;
+            }
+          }
+          closeModal();
+          toast("اكتمل الترحيل: " + total + " طالباً 🎓");
+        } catch (err) {
+          toast("تعذّر الترحيل: " + (err.code || err.message), "err");
+          btn.disabled = false; btn.textContent = "تنفيذ الترحيل";
+        }
+      } }
+    ]
+  });
+};
 
 /* ═══════════════ النسخ الاحتياطي ═══════════════ */
 async function fetchAllAttendance() {
