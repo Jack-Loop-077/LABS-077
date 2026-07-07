@@ -374,6 +374,57 @@ main{max-width:1080px;margin-inline:auto;padding:16px 14px calc(var(--nav-h) + 2
 /* الدراسة الصباحية/المسائية */
 .roster-item.hosted{border-style:dashed;border-color:var(--prim-line)}
 .badge-host{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--prim);background:var(--prim-soft);border-radius:999px;padding:1px 8px}
+
+/* ═══ حزمة الصقل الشامل ═══ */
+*::-webkit-scrollbar{width:9px;height:9px}
+*::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid var(--surface)}
+*::-webkit-scrollbar-thumb:hover{background:var(--mut)}
+*::-webkit-scrollbar-track{background:transparent}
+
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+main > .view.active{animation:viewIn .18s ease-out}
+
+.sec-title{display:flex;align-items:center;gap:7px}
+.sec-title::before{content:"";width:4px;height:13px;border-radius:4px;background:var(--prim);flex:none;opacity:.85}
+
+.sel.unset{color:var(--mut)}
+[data-theme="dark"] .sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2393A5A0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+
+@media(hover:hover){
+  .roster-item:hover,.rec:hover,.st:hover,.rep-sub:hover{border-color:var(--prim-line)}
+  .inp:hover,.sel:hover{border-color:var(--prim-line)}
+  .btn-ic:hover{background:var(--prim-soft);border-color:var(--prim-line)}
+  .seg button:not([class*="on-"]):hover{background:var(--line);color:var(--ink)}
+  .nav-btn:hover{color:var(--prim)}
+  button.chip:hover{border-color:var(--prim-line);background:var(--prim-soft)}
+  .t-c:hover{background:rgba(255,255,255,.18)}
+}
+
+@supports (backdrop-filter: blur(8px)){
+  .nav{background:color-mix(in srgb, var(--card) 82%, transparent);backdrop-filter:blur(10px) saturate(1.3)}
+}
+
+.modal-card{border:1px solid var(--line)}
+.num{width:auto;min-width:24px}
+.avatar{flex:none}
+
+/* ألوان رمزية ثابتة لكل طالب حسب اسمه */
+.av0{background:#E3F1EF;color:#0A4A45}
+.av1{background:#EDE9FE;color:#5B21B6}
+.av2{background:#FEF3C7;color:#92400E}
+.av3{background:#DBEAFE;color:#1E40AF}
+.av4{background:#FCE7F3;color:#9D174D}
+.av5{background:#DCFCE7;color:#166534}
+.av6{background:#FFEDD5;color:#9A3412}
+.av7{background:#E0E7FF;color:#3730A3}
+[data-theme="dark"] .av0{background:#11332E;color:#8FD9CF}
+[data-theme="dark"] .av1{background:#2A1F45;color:#C4B5FD}
+[data-theme="dark"] .av2{background:#3A2A0C;color:#FCD34D}
+[data-theme="dark"] .av3{background:#152642;color:#93C5FD}
+[data-theme="dark"] .av4{background:#3D1230;color:#F9A8D4}
+[data-theme="dark"] .av5{background:#0F2E1B;color:#86EFAC}
+[data-theme="dark"] .av6{background:#3A200E;color:#FDBA74}
+[data-theme="dark"] .av7{background:#1E2447;color:#A5B4FC}
 </style>
 </head>
 <body>
@@ -670,6 +721,11 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const coll = new Intl.Collator("ar");
+const avCls = name => {
+  let h = 0; const t = String(name || "");
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return "av" + (h % 8);
+};
 const todayStr = () => new Date().toLocaleDateString("en-CA");
 const fmtDate = d => { try { return new Date(d + "T00:00:00").toLocaleDateString("ar-IQ", {weekday:"short", day:"numeric", month:"short"}); } catch { return d; } };
 
@@ -788,6 +844,10 @@ function netUpd() { $("#netChip").classList.toggle("show", !navigator.onLine); }
 addEventListener("online", () => { netUpd(); });
 addEventListener("offline", netUpd);
 netUpd();
+document.addEventListener("change", e => {
+  const s = e.target.closest("select.sel");
+  if (s) s.classList.toggle("unset", !s.value);
+});
 
 /* ---------- الحالة والبيانات الحيّة ---------- */
 const DEFAULT_LISTS = {
@@ -886,6 +946,7 @@ function fillPickers() {
   // إدارة المواد
   fillSelect($("#subStage"), settings.stages, $("#subStage").value || settings.stages[0] || "", null);
   fillSelect($("#prStage"), settings.stages, $("#prStage").value || settings.stages[0] || "", null);
+  $$(".sel").forEach(s => s.classList.toggle("unset", !s.value));
 }
 function fillSubjectSel() {
   const list = subjects.filter(s => s.stage === sel.stage);
@@ -1243,7 +1304,7 @@ function startRollCall(list) {
       '<span class="chip" style="flex:none"><b>' + (i + 1) + '</b>&nbsp;/ ' + list.length + '</span>' +
       '<div class="rep-bar" style="flex:1;margin:0"><i style="width:' + pc + '%;background:var(--prim)"></i></div></div>' +
       '<div style="text-align:center;padding:14px 6px 4px">' +
-      '<span class="avatar" style="width:58px;height:58px;font-size:23px;margin:0 auto;display:grid">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
+      '<span class="avatar ' + avCls(s.name) + '" style="width:58px;height:58px;font-size:23px;margin:0 auto;display:grid">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
       '<b style="display:block;font-size:21px;margin:12px 0 3px;line-height:1.5">' + esc(s.name) + '</b>' +
       (((s.shift || "صباحي") !== sel.shift) ? '<div style="margin:4px 0 6px"><span class="badge-host" style="font-size:12px;padding:3px 12px">استضافة — ' + esc(s.shift || "صباحي") + '</span></div>' : "") +
       '<span class="hint">' + (esc([s.section ? "شعبة " + s.section : "", !s.lab ? "متنقّل" : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) || "&nbsp;") + '</span></div>' +
@@ -1348,7 +1409,7 @@ function openGuestPicker() {
       !attRecords.has(s.id) && (!t || s.name.includes(t)));
     list.innerHTML = items.length ? items.slice(0, 60).map(s =>
       '<button class="st" style="width:100%;text-align:right" data-id="' + esc(s.id) + '">' +
-      '<span class="avatar">' + esc((s.name || "؟").trim()[0] || "؟") + '</span><span class="smain"><b>' + esc(s.name) +
+      '<span class="avatar ' + avCls(s.name) + '">' + esc((s.name || "؟").trim()[0] || "؟") + '</span><span class="smain"><b>' + esc(s.name) +
       '</b><span class="meta"><span class="tag t-lab">' + esc(s.lab) + "</span>" +
       ((s.shift || "صباحي") === "مسائي" ? '<span class="tag">مسائي</span>' : "") +
       (s.section ? '<span class="tag">شعبة ' + esc(s.section) + "</span>" : "") + "</span></span>" +
@@ -1752,7 +1813,7 @@ function renderStudents() {
   const rowHTML = s =>
     '<div class="st' + (selMode && selSet.has(s.id) ? " sel" : "") + '" data-sid="' + esc(s.id) + '">' +
     (selMode ? '<span class="pick' + (selSet.has(s.id) ? " on" : "") + '"></span>' : "") +
-    '<span class="avatar">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
+    '<span class="avatar ' + avCls(s.name) + '">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
     '<div class="smain"><b>' + esc(s.name) + '</b><div class="meta">' +
     '<span class="tag t-stage">' + esc(s.stage) + "</span>" +
     (s.section ? '<span class="tag">شعبة ' + esc(s.section) + "</span>" : "") +
@@ -2549,7 +2610,7 @@ async function openStudentReport(sid, fbName) {
     const recs = useTerm ? recsAll.filter(r => r.date >= term.from && r.date <= term.to) : recsAll;
     let h =
       '<div style="display:flex;align-items:center;gap:11px;margin-bottom:10px">' +
-      '<span class="avatar" style="width:46px;height:46px;font-size:18px">' + esc((name || "؟").trim()[0] || "؟") + '</span>' +
+      '<span class="avatar ' + avCls(name) + '" style="width:46px;height:46px;font-size:18px">' + esc((name || "؟").trim()[0] || "؟") + '</span>' +
       '<div style="flex:1;min-width:0"><b style="font-size:16px">' + esc(name) + '</b>' +
       '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">' +
       (s ? '<span class="tag t-stage">' + esc(s.stage) + '</span>' +
