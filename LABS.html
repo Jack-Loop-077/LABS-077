@@ -939,8 +939,14 @@ function isActive(s) {
 }
 function rosterStudents() {
   return students.filter(s =>
-    isActive(s) && s.stage === sel.stage && s.lab === sel.lab &&
+    isActive(s) && s.stage === sel.stage && (!s.lab || s.lab === sel.lab) &&
     (s.shift || "صباحي") === sel.shift && (!sel.section || s.section === sel.section));
+}
+function hostedStudents() {
+  const other = sel.shift === "مسائي" ? "صباحي" : "مسائي";
+  return students.filter(s =>
+    isActive(s) && s.stage === sel.stage && (!s.lab || s.lab === sel.lab) &&
+    (s.shift || "صباحي") === other && (!sel.section || s.section === sel.section));
 }
 
 function renderAttend() {
@@ -996,9 +1002,7 @@ function renderRoster() {
   const rosterAll = rosterStudents();
   const rosterIds = new Set(rosterAll.map(s => s.id));
   const otherShift = sel.shift === "مسائي" ? "صباحي" : "مسائي";
-  const hostedAll = students.filter(s =>
-    isActive(s) && s.stage === sel.stage && s.lab === sel.lab &&
-    (s.shift || "صباحي") === otherShift && (!sel.section || s.section === sel.section));
+  const hostedAll = hostedStudents();
   const hostedIds = new Set(hostedAll.map(s => s.id));
   const guestRecs = [...attRecords.values()].filter(r =>
     r.sessionLab === sel.lab && (!r.sessionShift || r.sessionShift === sel.shift) && !rosterIds.has(r.studentId));
@@ -1061,7 +1065,7 @@ function renderRoster() {
       const r = attRecords.get(s.id);
       h += '<div class="roster-item" data-sid="' + esc(s.id) + '"' + (r ? ' data-st="' + r.status + '"' : "") +
         '><span class="num">' + i + '</span><div class="rname"><b>' + esc(s.name) +
-        '</b><span class="meta">' + esc([s.section ? "شعبة " + s.section : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) + "</span></div>" +
+        '</b><span class="meta">' + esc([s.section ? "شعبة " + s.section : "", !s.lab ? "متنقّل — بدون مختبر" : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) + "</span></div>" +
         segHTML(r, s.id) + "</div>";
     });
     if (hostedShow.length) {
@@ -1072,7 +1076,8 @@ function renderRoster() {
         h += '<div class="roster-item hosted" data-sid="' + esc(s.id) + '"' + (r ? ' data-st="' + r.status + '"' : "") +
           '><span class="num">' + i + '</span><div class="rname"><b>' + esc(s.name) +
           '</b><span class="meta"><span class="badge-host">استضافة — ' + esc(otherShift) + "</span>" +
-          (s.section ? "<span> شعبة " + esc(s.section) + "</span>" : "") + "</span></div>" +
+          (s.section ? "<span> شعبة " + esc(s.section) + "</span>" : "") +
+          (!s.lab ? "<span> • متنقّل</span>" : "") + "</span></div>" +
           segHTML(r, s.id) + "</div>";
       });
     }
@@ -1162,10 +1167,32 @@ $("#recentsBox").addEventListener("click", e => {
 /* ---------- وضع المناداة ---------- */
 function openRollCall() {
   if (!sel.stage || !sel.subjectId || !sel.lab) { toast("اختر المرحلة والمادة والمختبر أولاً", "err"); return; }
-  guardLock(sel.date, sel.stage).then(ok => { if (ok) startRollCall(); });
+  guardLock(sel.date, sel.stage).then(ok => {
+    if (!ok) return;
+    const core = rosterStudents().filter(s => !attRecords.get(s.id));
+    const host = hostedStudents().filter(s => !attRecords.get(s.id));
+    const other = sel.shift === "مسائي" ? "صباحي" : "مسائي";
+    if (!core.length && !host.length) { toast("الكل محدد مسبقاً — ماكو «بلا تحديد» للمناداة"); return; }
+    if (!host.length) { startRollCall(core); return; }
+    if (showHosted) { startRollCall([...core, ...host]); return; }
+    if (!core.length) { showHosted = true; renderRoster(); startRollCall(host); return; }
+    openModal({
+      title: "المناداة على منو؟",
+      body: '<p style="font-size:14px">اكو <b>' + host.length + '</b> طالب استضافة من ال' + esc(other) +
+        ' بلا تحديد بهذا المختبر.</p><p class="hint" style="margin-top:6px">إذا ضمّيتهم، ينسجلون على دراستهم الأصلية (' + esc(other) + ') مثل المعتاد.</p>',
+      actions: [
+        { label: "قائمتي فقط (" + core.length + ")", cls: "btn-g", onClick: () => { closeModal(); startRollCall(core); } },
+        { label: "مع الاستضافة (" + (core.length + host.length) + ")", cls: "btn-p", onClick: () => {
+          closeModal();
+          showHosted = true;
+          renderRoster();
+          startRollCall([...core, ...host]);
+        } }
+      ]
+    });
+  });
 }
-function startRollCall() {
-  const list = rosterStudents().filter(s => !attRecords.get(s.id));
+function startRollCall(list) {
   if (!list.length) { toast("الكل محدد مسبقاً — ماكو «بلا تحديد» للمناداة"); return; }
   let i = 0;
   const chosen = new Map();
@@ -1218,7 +1245,8 @@ function startRollCall() {
       '<div style="text-align:center;padding:14px 6px 4px">' +
       '<span class="avatar" style="width:58px;height:58px;font-size:23px;margin:0 auto;display:grid">' + esc((s.name || "؟").trim()[0] || "؟") + '</span>' +
       '<b style="display:block;font-size:21px;margin:12px 0 3px;line-height:1.5">' + esc(s.name) + '</b>' +
-      '<span class="hint">' + (esc([s.section ? "شعبة " + s.section : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) || "&nbsp;") + '</span></div>' +
+      (((s.shift || "صباحي") !== sel.shift) ? '<div style="margin:4px 0 6px"><span class="badge-host" style="font-size:12px;padding:3px 12px">استضافة — ' + esc(s.shift || "صباحي") + '</span></div>' : "") +
+      '<span class="hint">' + (esc([s.section ? "شعبة " + s.section : "", !s.lab ? "متنقّل" : "", s.acadStatus === "returned" ? "عائد" : ""].filter(Boolean).join(" • ")) || "&nbsp;") + '</span></div>' +
       '<div class="grid g3" style="margin-top:16px">' +
       '<button class="btn" data-rcst="present" style="background:var(--ok);color:#fff;min-height:58px;flex-direction:column;gap:3px">' + ICO.check + 'حاضر</button>' +
       '<button class="btn" data-rcst="absent" style="background:var(--no);color:#fff;min-height:58px;flex-direction:column;gap:3px">' + ICO.x + 'غائب</button>' +
@@ -1246,7 +1274,7 @@ async function setStatus(studentId, status) {
     if (rec && rec.status === status) { await deleteDoc(doc(db, "attendance", docId)); return; }
     const subj = subjects.find(x => x.id === sel.subjectId);
     const base = s
-      ? { studentName: s.name, stage: s.stage, section: s.section || "", lab: s.lab, shift: s.shift || "صباحي" }
+      ? { studentName: s.name, stage: s.stage, section: s.section || "", lab: s.lab || sel.lab, shift: s.shift || "صباحي" }
       : { studentName: rec.studentName, stage: rec.stage, section: rec.section || "", lab: rec.lab, shift: rec.shift || "صباحي" };
     await setDoc(doc(db, "attendance", docId), {
       studentId, ...base,
@@ -1293,7 +1321,7 @@ async function fillRemaining(status) {
       const batch = writeBatch(db);
       roster.slice(i, i + 400).forEach(s => {
         batch.set(doc(db, "attendance", sel.date + "_" + sel.subjectId + "_" + s.id), {
-          studentId: s.id, studentName: s.name, stage: s.stage, section: s.section || "", lab: s.lab, shift: s.shift || "صباحي",
+          studentId: s.id, studentName: s.name, stage: s.stage, section: s.section || "", lab: s.lab || sel.lab, shift: s.shift || "صباحي",
           subjectId: sel.subjectId, subjectName: subj ? subj.name : "",
           date: sel.date, status, sessionLab: sel.lab, sessionShift: sel.shift,
           recordedBy: user ? user.email : "", updatedAt: serverTimestamp()
@@ -1316,7 +1344,7 @@ function openGuestPicker() {
   const list = wrap.querySelector("#gList"), inp = wrap.querySelector("#gSearch");
   function draw() {
     const t = inp.value.trim();
-    const items = students.filter(s => isActive(s) && s.stage === sel.stage && s.lab !== sel.lab &&
+    const items = students.filter(s => isActive(s) && s.stage === sel.stage && s.lab && s.lab !== sel.lab &&
       !attRecords.has(s.id) && (!t || s.name.includes(t)));
     list.innerHTML = items.length ? items.slice(0, 60).map(s =>
       '<button class="st" style="width:100%;text-align:right" data-id="' + esc(s.id) + '">' +
@@ -1602,7 +1630,7 @@ const ST_COLS = [
 ];
 const recRowObj = r => ({ date: r.date, name: r.studentName, stage: r.stage, section: r.section || "",
   lab: r.lab, shift: r.shift || "صباحي", slab: r.sessionLab || r.lab, subject: r.subjectName, status: stTxt(r.status) });
-const stRowObj = s => ({ name: s.name, stage: s.stage, section: s.section || "", lab: s.lab, shift: s.shift || "صباحي" });
+const stRowObj = s => ({ name: s.name, stage: s.stage, section: s.section || "", lab: s.lab || "—", shift: s.shift || "صباحي" });
 
 $("#btnRExport").onclick = async function () {
   const stg = $("#rStage").value, sub = $("#rSubject").value, lb = $("#rLab").value;
@@ -1728,7 +1756,7 @@ function renderStudents() {
     '<div class="smain"><b>' + esc(s.name) + '</b><div class="meta">' +
     '<span class="tag t-stage">' + esc(s.stage) + "</span>" +
     (s.section ? '<span class="tag">شعبة ' + esc(s.section) + "</span>" : "") +
-    '<span class="tag t-lab">' + esc(s.lab) + "</span>" +
+    (s.lab ? '<span class="tag t-lab">' + esc(s.lab) + "</span>" : '<span class="tag" style="border-style:dashed">بدون مختبر — الكل</span>') +
     ((s.shift || "صباحي") === "مسائي" ? '<span class="tag">مسائي</span>' : "") +
     (s.graduate ? '<span class="tag" style="color:var(--ex);border-color:transparent;background:var(--ex-soft)">خريج' + (s.gradYear ? " " + esc(s.gradYear) : "") + "</span>" : "") +
     (s.acadStatus === "returned" ? '<span class="tag" style="color:var(--prim-deep);background:var(--prim-soft);border-color:transparent">عائد</span>' : "") +
@@ -1791,7 +1819,7 @@ function studentModal(s) {
          '<p class="hint" style="margin-top:11px">تعديل بيانات الطالب لا يغيّر سجلات حضوره القديمة — تبقى محفوظة كما سُجّلت بتاريخها.</p>' : '');
   fillSelect(wrap.querySelector("#fStage"), settings.stages, s ? s.stage : (sel.stage || settings.stages[0] || ""), null);
   fillSelect(wrap.querySelector("#fSection"), settings.sections, s ? (s.section || "") : (sel.section || ""), "بدون شعبة");
-  fillSelect(wrap.querySelector("#fLab"), settings.labs, s ? s.lab : (sel.lab || settings.labs[0] || ""), null);
+  fillSelect(wrap.querySelector("#fLab"), settings.labs, s ? (s.lab || "") : (sel.lab || settings.labs[0] || ""), "بدون مختبر — يظهر بكل المختبرات");
   wrap.querySelector("#fShift").value = s ? (s.shift || "صباحي") : (sel.shift || "صباحي");
   if (s) {
     wrap.querySelector("#fGrad").value = s.graduate ? "grad" : (s.acadStatus || "active");
@@ -1806,7 +1834,7 @@ function studentModal(s) {
         const name = wrap.querySelector("#fName").value.trim();
         const stage = wrap.querySelector("#fStage").value, section = wrap.querySelector("#fSection").value, lab = wrap.querySelector("#fLab").value, shift = wrap.querySelector("#fShift").value;
         if (!name) { toast("اكتب اسم الطالب", "err"); return; }
-        if (!stage || !lab) { toast("حدّد المرحلة والمختبر", "err"); return; }
+        if (!stage) { toast("حدّد المرحلة", "err"); return; }
         const exDup = !s ? students.find(x => !x.graduate && x.name === name) : null;
         if (exDup && !btn.dataset.warned) {
           btn.dataset.warned = "1";
@@ -1877,7 +1905,7 @@ $("#bulkMove").onclick = () => {
     '<div class="grid g2">' +
     '<div class="field"><label class="lbl">المرحلة</label><select class="sel" id="bmStage"><option value="__keep">— بدون تغيير —</option>' + settings.stages.map(v => "<option>" + esc(v) + "</option>").join("") + '</select></div>' +
     '<div class="field"><label class="lbl">الشعبة</label><select class="sel" id="bmSec"><option value="__keep">— بدون تغيير —</option><option value="">بدون شعبة</option>' + settings.sections.map(v => "<option>" + esc(v) + "</option>").join("") + '</select></div>' +
-    '<div class="field"><label class="lbl">المختبر</label><select class="sel" id="bmLab"><option value="__keep">— بدون تغيير —</option>' + settings.labs.map(v => "<option>" + esc(v) + "</option>").join("") + '</select></div>' +
+    '<div class="field"><label class="lbl">المختبر</label><select class="sel" id="bmLab"><option value="__keep">— بدون تغيير —</option><option value="">بدون مختبر (يظهر بالكل)</option>' + settings.labs.map(v => "<option>" + esc(v) + "</option>").join("") + '</select></div>' +
     '<div class="field"><label class="lbl">الدراسة</label><select class="sel" id="bmShift"><option value="__keep">— بدون تغيير —</option><option>صباحي</option><option>مسائي</option></select></div></div>';
   openModal({ title: "نقل جماعي", body: wrap, actions: [
     { label: "إلغاء", cls: "btn-g", onClick: closeModal },
@@ -1968,7 +1996,7 @@ function importPreview(items) {
   items = items.filter(it => { if (seenNames.has(it.name)) return false; seenNames.add(it.name); return true; });
   const newVals = { stages: new Set(), sections: new Set(), labs: new Set() };
   items.forEach(it => {
-    it.err = !it.stage || !it.lab ? "ناقص مرحلة أو مختبر" : "";
+    it.err = !it.stage ? "ناقص المرحلة" : "";
     const ex = students.find(x => !x.graduate && x.name === it.name);
     it.exist = ex || null;
     it.same = !!(ex && !it.err && ex.stage === it.stage && (ex.section || "") === (it.section || "") && ex.lab === it.lab && (ex.shift || "صباحي") === it.shift);
@@ -1976,7 +2004,7 @@ function importPreview(items) {
     if (!it.err) {
       if (!settings.stages.includes(it.stage)) newVals.stages.add(it.stage);
       if (it.section && !settings.sections.includes(it.section)) newVals.sections.add(it.section);
-      if (!settings.labs.includes(it.lab)) newVals.labs.add(it.lab);
+      if (it.lab && !settings.labs.includes(it.lab)) newVals.labs.add(it.lab);
     }
   });
   const fresh = items.filter(i => !i.err && !i.exist);
@@ -2069,9 +2097,9 @@ function resolveConflicts(list, nAdded, nSame) {
       '<b style="font-size:16.5px;display:block;margin-bottom:12px">' + esc(it.name) + '</b>' +
       '<div class="grid g2">' +
       '<div class="rep-sub" style="margin:0"><p class="lbl" style="margin-bottom:5px">الموجود حالياً</p><b style="font-size:13px">' +
-        esc([ex.stage, ex.section && "شعبة " + ex.section, ex.lab, ex.shift || "صباحي"].filter(Boolean).join(" • ")) + '</b></div>' +
+        esc([ex.stage, ex.section && "شعبة " + ex.section, ex.lab || "بدون مختبر", ex.shift || "صباحي"].filter(Boolean).join(" • ")) + '</b></div>' +
       '<div class="rep-sub" style="margin:0;border-color:var(--prim)"><p class="lbl" style="margin-bottom:5px;color:var(--prim)">بالملف الجديد</p><b style="font-size:13px">' +
-        esc([it.stage, it.section && "شعبة " + it.section, it.lab, it.shift].filter(Boolean).join(" • ")) + '</b></div></div>' +
+        esc([it.stage, it.section && "شعبة " + it.section, it.lab || "بدون مختبر", it.shift].filter(Boolean).join(" • ")) + '</b></div></div>' +
       '<p class="hint" style="margin-top:10px">«تحديث» يعدّل بيانات نفس الطالب ويحافظ على كل سجلات حضوره القديمة كما هي.</p>' +
       '<div style="display:flex;gap:8px;margin-top:12px">' +
       '<button class="btn btn-g btn-sm" id="cAllOld" style="flex:1">إبقاء الكل القديم (' + (list.length - i) + ')</button>' +
@@ -2526,7 +2554,7 @@ async function openStudentReport(sid, fbName) {
       '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">' +
       (s ? '<span class="tag t-stage">' + esc(s.stage) + '</span>' +
            (s.section ? '<span class="tag">شعبة ' + esc(s.section) + '</span>' : '') +
-           '<span class="tag t-lab">' + esc(s.lab) + '</span>' +
+           (s.lab ? '<span class="tag t-lab">' + esc(s.lab) + '</span>' : '<span class="tag" style="border-style:dashed">بدون مختبر</span>') +
            ((s.shift || "صباحي") === "مسائي" ? '<span class="tag">مسائي</span>' : '') +
            (s.graduate ? '<span class="tag" style="color:var(--ex);background:var(--ex-soft);border-color:transparent">خريج' + (s.gradYear ? " " + esc(s.gradYear) : "") + '</span>' : '') +
            (s.acadStatus === "returned" ? '<span class="tag" style="color:var(--prim-deep);background:var(--prim-soft);border-color:transparent">عائد</span>' : '') +
@@ -2930,7 +2958,7 @@ $("#btnDupScan").onclick = () => {
     dups.map((g, i) =>
       '<div class="rep-sub"><div class="rep-head"><b>' + esc(g[0].name) + '</b><span class="chip"><b>' + g.length + '</b></span>' +
       '<button class="btn btn-sm btn-p" data-dgm="' + i + '">دمج…</button></div>' +
-      '<div class="rep-stats">' + g.map(s => "<span>" + esc(s.name) + " — " + esc(s.stage) + " • " + esc(s.lab) + (s.graduate ? " • خريج" : "") + "</span>").join("") +
+      '<div class="rep-stats">' + g.map(s => "<span>" + esc(s.name) + " — " + esc(s.stage) + " • " + esc(s.lab || "بدون مختبر") + (s.graduate ? " • خريج" : "") + "</span>").join("") +
       '</div></div>').join("");
 };
 $("#dupList").addEventListener("click", e => {
@@ -2947,7 +2975,7 @@ function openMergeDlg(g) {
       '<label class="roster-item" style="cursor:pointer"><input type="radio" name="mergeP" value="' + i + '"' + (i === 0 ? " checked" : "") +
       ' style="width:17px;height:17px;accent-color:var(--prim);flex:none">' +
       '<div class="rname"><b>' + esc(s.name) + '</b><span class="meta">' +
-      esc([s.stage, s.section && "شعبة " + s.section, s.lab, s.graduate ? "خريج" : ""].filter(Boolean).join(" • ")) +
+      esc([s.stage, s.section && "شعبة " + s.section, s.lab || "بدون مختبر", s.graduate ? "خريج" : ""].filter(Boolean).join(" • ")) +
       '</span></div></label>').join("") +
     '<p class="hint" style="margin-top:6px">إذا للاثنين سجل بنفس اليوم والمادة، يُعتمد سجل الملف المعتمد ويُهمل الآخر.</p>';
   openModal({
