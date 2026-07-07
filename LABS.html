@@ -604,6 +604,39 @@ main > .view.active{animation:viewIn .18s ease-out}
       </div>
 
       <div class="card">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>الترويسة الرسمية</h2>
+        <p class="hint" style="margin-bottom:10px">تظهر أعلى <b>كل ملفات Excel</b> — الشعار والاسم يتحفظون مرة وحدة، وتعدّلهم من هنا وقت ما تريد.</p>
+        <div class="grid g2">
+          <div class="field"><label class="lbl">السطر الأول (الجامعة / الكلية)</label><input class="inp" id="orgL1" placeholder="جامعة … — كلية …"></div>
+          <div class="field"><label class="lbl">السطر الثاني (القسم)</label><input class="inp" id="orgL2" placeholder="قسم …"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;margin-top:12px;flex-wrap:wrap">
+          <img id="orgLogoPrev" alt="" style="display:none;width:52px;height:52px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#fff;padding:4px">
+          <button class="btn btn-g btn-sm" id="btnOrgLogo">رفع الشعار</button>
+          <button class="btn btn-g btn-sm" id="btnOrgLogoRm" style="color:var(--no);display:none">إزالة</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-p btn-sm" id="btnOrgSave">حفظ الترويسة</button>
+        </div>
+        <input type="file" id="orgLogoFile" accept="image/*" hidden>
+      </div>
+
+      <div class="card">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg>التنبيهات والإنذارات</h2>
+        <p class="hint" style="margin-bottom:10px">كشف رسمي: صفوف الطلاب × أعمدة <b>كل مواد المرحلة</b> (بغض النظر عن المختبر)، وكل خلية تعرض المستوى الحالي فقط: تنبيه ← إنذار ← إنذار نهائي حسب عدد غياباته بالمادة — والخالي يبقى فارغاً.</p>
+        <div class="grid g3">
+          <div class="field"><label class="lbl">المرحلة</label><select class="sel" id="wnStage"></select></div>
+          <div class="field"><label class="lbl">الشعبة</label><select class="sel" id="wnSection"></select></div>
+          <div class="field"><label class="lbl">الدراسة</label><select class="sel" id="wnShift"><option value="">الكل</option><option>صباحي</option><option>مسائي</option></select></div>
+        </div>
+        <div class="grid g2" style="margin-top:10px">
+          <div class="field"><label class="lbl">التنبيه بعد (غيابات)</label><input class="inp" type="number" id="wnN1" min="1" value="3" inputmode="numeric"></div>
+          <div class="field"><label class="lbl">الترقية كل (غيابات)</label><input class="inp" type="number" id="wnStep" min="1" value="2" inputmode="numeric"></div>
+        </div>
+        <button class="btn btn-p" id="btnWarnX" style="width:100%;margin-top:12px">توليد كشف التنبيهات Excel</button>
+        <div id="wnSum" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h14v13.5M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-4.5H6.5A2.5 2.5 0 0 0 4 19.5z"/></svg>المواد الدراسية</h2>
         <div class="grid" style="grid-template-columns:2fr 1.4fr auto">
           <input class="inp" id="subName" placeholder="اسم المادة">
@@ -856,7 +889,8 @@ const DEFAULT_LISTS = {
   labs: ["مختبر 1", "مختبر 2"],
   alertPct: 15, alertExcused: "no",
   lockTerms: true,
-  stageSystems: {}
+  stageSystems: {},
+  alertAbs1: 3, alertStep: 2
 };
 let settings = { stages: [], sections: [], labs: [] };
 let students = [], subjects = [];
@@ -896,6 +930,7 @@ function onDataChange() {
   renderOverview();
   renderTerms();
   renderBackupStatus();
+  renderOrg();
 }
 
 /* ---------- التنقل ---------- */
@@ -946,6 +981,8 @@ function fillPickers() {
   // إدارة المواد
   fillSelect($("#subStage"), settings.stages, $("#subStage").value || settings.stages[0] || "", null);
   fillSelect($("#prStage"), settings.stages, $("#prStage").value || settings.stages[0] || "", null);
+  fillSelect($("#wnStage"), settings.stages, $("#wnStage").value || settings.stages[0] || "", null);
+  fillSelect($("#wnSection"), settings.sections, $("#wnSection").value, "كل الشعب");
   $$(".sel").forEach(s => s.classList.toggle("unset", !s.value));
 }
 function fillSubjectSel() {
@@ -1566,11 +1603,18 @@ const XLC = {
 const XLB = c => ({ top: { style: "thin", color: { argb: c } }, bottom: { style: "thin", color: { argb: c } },
   left: { style: "thin", color: { argb: c } }, right: { style: "thin", color: { argb: c } } });
 const SYM_STYLE = { "حاضر": [XLC.ok, XLC.okBg], "غائب": [XLC.no, XLC.noBg], "مجاز": [XLC.ex, XLC.exBg],
-  "✓": [XLC.ok, XLC.okBg], "✕": [XLC.no, XLC.noBg], "م": [XLC.ex, XLC.exBg] };
+  "✓": [XLC.ok, XLC.okBg], "✕": [XLC.no, XLC.noBg], "م": [XLC.ex, XLC.exBg],
+  "تنبيه": [XLC.ex, XLC.exBg], "إنذار": ["FFC2410C", XLC.exBg], "إنذار نهائي": [XLC.no, XLC.noBg] };
 
 async function exportStyledXLSX(filename, sheets) {
   const wb = new ExcelJS.Workbook();
   wb.creator = "حاضر"; wb.created = new Date();
+  let logoId = null;
+  if (settings.orgLogo) {
+    try {
+      logoId = wb.addImage({ base64: settings.orgLogo, extension: settings.orgLogo.includes("image/jpeg") ? "jpeg" : "png" });
+    } catch {}
+  }
   const used = new Set();
   sheets.forEach(sh => {
     let nm = (sh.name || "ورقة").replace(/[\\/?*\[\]:]/g, "-").slice(0, 31);
@@ -1586,6 +1630,23 @@ async function exportStyledXLSX(filename, sheets) {
     });
     const n = sh.columns.length;
     let R = 1;
+    /* الترويسة الرسمية */
+    if (settings.orgName1 || settings.orgName2 || logoId !== null) {
+      ws.mergeCells(R, 1, R, n);
+      const o1 = ws.getCell(R, 1);
+      o1.value = settings.orgName1 || "";
+      o1.font = { name: "Calibri", size: 13, bold: true, color: { argb: XLC.ink } };
+      o1.alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(R).height = 24; R++;
+      ws.mergeCells(R, 1, R, n);
+      const o2 = ws.getCell(R, 1);
+      o2.value = settings.orgName2 || "";
+      o2.font = { name: "Calibri", size: 11, color: { argb: XLC.mut } };
+      o2.alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(R).height = 18; R++;
+      if (logoId !== null) ws.addImage(logoId, { tl: { col: 0.15, row: 0.12 }, ext: { width: 52, height: 52 } });
+      ws.getRow(R).height = 6; R++;
+    }
     /* العنوان */
     ws.mergeCells(R, 1, R, n);
     const t = ws.getCell(R, 1);
@@ -1928,7 +1989,7 @@ let selMode = false;
 const selSet = new Set();
 function updateBulkBar() {
   const bar = $("#bulkBar"); if (!bar) return;
-  bar.style.display = selMode ? "" : "none";
+  bar.style.display = selMode ? "block" : "none";
   $("#bulkCount").textContent = selSet.size;
   ["bulkMove", "bulkStatus", "bulkDel"].forEach(id => { $("#" + id).disabled = !selSet.size; });
   const t = $("#btnSelMode");
@@ -3110,6 +3171,130 @@ function renderBackupStatus() {
     }
   }
 }
+
+/* ═══════════════ الترويسة الرسمية ═══════════════ */
+function renderOrg() {
+  const a = $("#orgL1"), b = $("#orgL2");
+  if (a && document.activeElement !== a) a.value = settings.orgName1 || "";
+  if (b && document.activeElement !== b) b.value = settings.orgName2 || "";
+  const img = $("#orgLogoPrev"), rm = $("#btnOrgLogoRm");
+  if (img) {
+    if (settings.orgLogo) { img.src = settings.orgLogo; img.style.display = ""; rm.style.display = ""; }
+    else { img.style.display = "none"; rm.style.display = "none"; }
+  }
+  const n1 = $("#wnN1"); if (n1 && document.activeElement !== n1 && settings.alertAbs1) n1.value = settings.alertAbs1;
+  const sp = $("#wnStep"); if (sp && document.activeElement !== sp && settings.alertStep) sp.value = settings.alertStep;
+}
+$("#btnOrgLogo").onclick = () => $("#orgLogoFile").click();
+$("#orgLogoFile").addEventListener("change", e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    const im = new Image();
+    im.onload = async () => {
+      const mx = 256, sc = Math.min(1, mx / Math.max(im.width, im.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(im.width * sc));
+      cv.height = Math.max(1, Math.round(im.height * sc));
+      cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
+      const url = cv.toDataURL("image/png");
+      if (url.length > 500000) { toast("الشعار كبير حتى بعد الضغط — استخدم صورة أبسط", "err"); return; }
+      settings.orgLogo = url;
+      await saveLists();
+      renderOrg();
+      toast("انحفظ الشعار ✓ — راح يطلع بكل ملفات Excel");
+    };
+    im.onerror = () => toast("تعذّرت قراءة الصورة", "err");
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(f);
+});
+$("#btnOrgLogoRm").onclick = async () => {
+  settings.orgLogo = "";
+  await saveLists();
+  renderOrg();
+  toast("انشال الشعار");
+};
+$("#btnOrgSave").onclick = async () => {
+  settings.orgName1 = $("#orgL1").value.trim();
+  settings.orgName2 = $("#orgL2").value.trim();
+  await saveLists();
+  audit("org", "تحديث الترويسة الرسمية");
+  toast("انحفظت الترويسة ✓");
+};
+
+/* ═══════════════ كشف التنبيهات والإنذارات ═══════════════ */
+$("#btnWarnX").onclick = async function () {
+  const stg = $("#wnStage").value;
+  if (!stg) { toast("اختر المرحلة", "err"); return; }
+  const secF = $("#wnSection").value, shF = $("#wnShift").value;
+  const n1 = Math.max(1, parseInt($("#wnN1").value) || 3);
+  const step = Math.max(1, parseInt($("#wnStep").value) || 2);
+  settings.alertAbs1 = n1; settings.alertStep = step; saveLists();
+  const exAsAbs = (settings.alertExcused || "no") === "yes";
+  const subs = subjects.filter(x => x.stage === stg).sort((a, b) => coll.compare(a.name, b.name));
+  if (!subs.length) { toast("ماكو مواد لهذه المرحلة", "err"); return; }
+  const kids = students.filter(s => isActive(s) && s.stage === stg &&
+    (!secF || (s.section || "") === secF) && (!shF || (s.shift || "صباحي") === shF))
+    .sort((a, b) => coll.compare(a.name, b.name));
+  if (!kids.length) { toast("ماكو طلاب حسب هذا الفلتر", "err"); return; }
+  this.disabled = true;
+  const oldT = this.textContent;
+  this.textContent = "جارٍ الحساب…";
+  try {
+    const term = termRangeFor(stg);
+    const snap = await getDocs(query(collection(db, "attendance"), where("stage", "==", stg)));
+    const inRange = r => !term || (r.date >= term.from && r.date <= term.to);
+    const abs = new Map();
+    snap.docs.forEach(d => {
+      const r = d.data();
+      if (!inRange(r)) return;
+      if (!(r.status === "absent" || (exAsAbs && r.status === "excused"))) return;
+      const k = r.studentId + "|" + r.subjectId;
+      abs.set(k, (abs.get(k) || 0) + 1);
+    });
+    const lvl = c => c >= n1 + 2 * step ? "إنذار نهائي" : c >= n1 + step ? "إنذار" : c >= n1 ? "تنبيه" : "";
+    const cols = [
+      { header: "ت", key: "i", width: 5 },
+      { header: "اسم الطالب", key: "name", width: 32, align: "right" },
+      ...subs.map((sj, j) => ({ header: sj.name, key: "s" + j, width: 13, symbol: true }))
+    ];
+    let cT = 0, cW = 0, cF = 0;
+    const rows = kids.map((s, i) => {
+      const o = { i: i + 1, name: s.name + ((s.shift || "صباحي") === "مسائي" && !shF ? " (مسائي)" : "") };
+      subs.forEach((sj, j) => {
+        const L = lvl(abs.get(s.id + "|" + sj.id) || 0);
+        o["s" + j] = L;
+        if (L === "تنبيه") cT++; else if (L === "إنذار") cW++; else if (L === "إنذار نهائي") cF++;
+      });
+      return o;
+    });
+    await exportStyledXLSX("حاضر - تنبيهات وإنذارات " + stg + " " + todayStr() + ".xlsx", [{
+      name: "التنبيهات والإنذارات",
+      title: "كشف التنبيهات والإنذارات",
+      info: [
+        "المرحلة: " + stg + ((settings.stageSystems || {})[stg] ? " (" + (settings.stageSystems || {})[stg] + ")" : "") +
+        "     |     الشعبة: " + (secF || "الكل") + "     |     الدراسة: " + (shF || "الكل"),
+        "تنبيه: " + n1 + " غيابات     |     إنذار: " + (n1 + step) + "     |     إنذار نهائي: " + (n1 + 2 * step) +
+        "     |     المجاز " + (exAsAbs ? "يُحسب" : "لا يُحسب") + " غياباً"
+      ],
+      meta: "أُصدر في " + todayStr() + (term ? "  •  ضمن " + term.name + " (" + term.from + " ← " + term.to + ")" : "  •  كل التاريخ") +
+        "  •  " + kids.length + " طالب × " + subs.length + " مادة",
+      columns: cols, rows,
+      landscape: subs.length > 4, xSplit: 2, tab: "FFB45309"
+    }]);
+    $("#wnSum").innerHTML = '<div class="summary">' +
+      '<div class="sum"><b>' + kids.length + '</b><span>طالب</span></div>' +
+      '<div class="sum e"><b>' + cT + '</b><span>تنبيه</span></div>' +
+      '<div class="sum" style="border-color:var(--ex)"><b style="color:#C2410C">' + cW + '</b><span>إنذار</span></div>' +
+      '<div class="sum a"><b>' + cF + '</b><span>إنذار نهائي</span></div></div>';
+    audit("warnings", "كشف تنبيهات: " + stg + " — " + (cT + cW + cF) + " حالة");
+    toast("نزل كشف التنبيهات ✓");
+  } catch (e) { toast("تعذّر التوليد: " + (e.code || e.message), "err"); }
+  this.disabled = false;
+  this.textContent = oldT;
+};
 
 /* ═══════════════ النسخ الاحتياطي ═══════════════ */
 async function fetchAllAttendance() {
