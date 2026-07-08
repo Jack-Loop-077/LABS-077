@@ -425,6 +425,41 @@ main > .view.active{animation:viewIn .18s ease-out}
 [data-theme="dark"] .av5{background:#0F2E1B;color:#86EFAC}
 [data-theme="dark"] .av6{background:#3A200E;color:#FDBA74}
 [data-theme="dark"] .av7{background:#1E2447;color:#A5B4FC}
+
+/* ═══════ رفعة الهوية البصرية ═══════ */
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{background:radial-gradient(1100px 520px at 88% -12%, var(--prim-soft) 0%, transparent 62%), var(--surface)}
+[data-theme="dark"] body{background:radial-gradient(1100px 520px at 88% -12%, rgba(22,169,156,.09), transparent 62%), var(--surface)}
+
+body.staff .adm{display:none!important}
+
+.card{border-radius:18px;box-shadow:0 1px 2px rgba(14,42,40,.05),0 14px 34px -22px rgba(14,42,40,.22)}
+[data-theme="dark"] .card{box-shadow:0 1px 2px rgba(0,0,0,.35),0 16px 38px -24px rgba(0,0,0,.65)}
+.card h2{font-size:17px;gap:10px}
+.card h2 svg{width:32px;height:32px;padding:7px;border-radius:10px;background:var(--prim-soft);color:var(--prim)}
+.danger-card h2 svg{background:var(--no-soft);color:var(--no)}
+#view-manage .card.clp > h2{margin-bottom:0}
+
+.inp,.sel{background-color:var(--surface);border-color:transparent}
+.inp:hover,.sel:hover{border-color:var(--prim-line)}
+.inp:focus,.sel:focus{background-color:var(--card);border-color:var(--prim)}
+
+.btn-p{background:linear-gradient(168deg, color-mix(in srgb, var(--prim) 82%, #fff) 0%, var(--prim) 42%, color-mix(in srgb, var(--prim) 82%, #000) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 5px 16px -7px rgba(15,118,110,.6)}
+.btn-p:hover{filter:brightness(1.06)}
+@media(hover:hover){.btn-p:hover,.btn-soft:hover{transform:translateY(-1px)}}
+
+.topbar::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent 4%,#E3B34C 32%,#2FA89D 68%,transparent 96%);opacity:.85}
+
+.ticket::before{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.13),transparent);animation:sheen 7s ease-in-out infinite;pointer-events:none}
+@keyframes sheen{0%,55%{left:-60%}100%{left:135%}}
+
+.nav-btn svg{width:38px;height:38px;padding:7.5px;border-radius:12px;transition:background .2s,color .15s}
+.nav-btn.on svg{background:var(--prim-soft);animation:navPop .28s ease-out}
+.nav-btn.on::before{display:none}
+@keyframes navPop{50%{transform:scale(1.14)}}
+
+.toast{backdrop-filter:blur(7px)}
+.sec-title::before{background:linear-gradient(180deg,#E3B34C,var(--prim))}
 </style>
 </head>
 <body>
@@ -554,7 +589,7 @@ main > .view.active{animation:viewIn .18s ease-out}
         <span style="flex:1"></span>
         <button class="btn btn-sm btn-p" id="bulkMove">نقل…</button>
         <button class="btn btn-sm btn-g" id="bulkStatus">الحالة…</button>
-        <button class="btn btn-sm btn-g" id="bulkDel" style="color:var(--no)">حذف</button>
+        <button class="btn btn-sm btn-g adm" id="bulkDel" style="color:var(--no)">حذف</button>
         <button class="btn btn-sm btn-g" id="bulkCancel">إلغاء</button>
       </div></div>
     </section>
@@ -582,7 +617,7 @@ main > .view.active{animation:viewIn .18s ease-out}
         </div>
       </div>
 
-      <div class="card">
+      <div class="card adm">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>الفصول الدراسية</h2>
         <div id="termList"></div>
         <label style="display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;margin-top:10px;cursor:pointer">
@@ -603,7 +638,7 @@ main > .view.active{animation:viewIn .18s ease-out}
         <button class="btn btn-p" id="btnAddTerm" style="width:100%;margin-top:10px">إضافة الفصل</button>
       </div>
 
-      <div class="card">
+      <div class="card adm">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>الترويسة الرسمية</h2>
         <p class="hint" style="margin-bottom:10px">تظهر أعلى <b>كل ملفات Excel</b> — الشعار والاسم يتحفظون مرة وحدة، وتعدّلهم من هنا وقت ما تريد.</p>
         <div class="grid g2">
@@ -646,12 +681,12 @@ main > .view.active{animation:viewIn .18s ease-out}
         <div id="subList" style="margin-top:13px"></div>
       </div>
 
-      <div class="card">
+      <div class="card adm">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>القوائم — المراحل والشعب والمختبرات</h2>
         <div id="listsBody"></div>
       </div>
 
-      <div class="card">
+      <div class="card adm">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>الترحيل — نهاية السنة</h2>
         <p class="hint" style="margin-bottom:10px">صعّد دفعة كاملة مرحلة فوق، وآخر مرحلة تتخرج 🎓 — الخريجون يبقون بالنظام (فلتر «الخريجون» بتبويب الطلاب) بكل سجلاتهم، وتكدر ترجّع أي واحد فعالاً من تعديل بياناته — المؤجل والمرقّن قيدهم ما يُرحّلون.</p>
         <div class="grid g2">
@@ -662,7 +697,7 @@ main > .view.active{animation:viewIn .18s ease-out}
         <button class="btn btn-p" id="btnPromote" style="width:100%;margin-top:12px">معاينة وتنفيذ الترحيل</button>
       </div>
 
-      <div class="card">
+      <div class="card adm">
         <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v6M18 9a9 9 0 0 1-9 9"/></svg>دمج المكررين</h2>
         <p class="hint" style="margin-bottom:10px">يفحص الأسماء المتطابقة أو المتشابهة إملائياً (أ/ا، ة/ه، ى/ي، المسافات الزائدة) ويدمجها بملف واحد مع نقل كل سجلات الحضور إليه.</p>
         <button class="btn btn-g" id="btnDupScan" style="width:100%">فحص المكررين</button>
@@ -683,12 +718,12 @@ main > .view.active{animation:viewIn .18s ease-out}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-g" id="btnBackupX" style="flex:1;min-width:45%">نسخة Excel</button>
           <button class="btn btn-g" id="btnBackupJ" style="flex:1;min-width:45%">نسخة JSON</button>
-          <button class="btn btn-soft" id="btnRestore" style="flex-basis:100%">استعادة من نسخة JSON</button>
+          <button class="btn btn-soft adm" id="btnRestore" style="flex-basis:100%">استعادة من نسخة JSON</button>
         </div>
         <input type="file" id="fileRestore" accept=".json,application/json" hidden>
       </div>
 
-      <div class="card danger-card">
+      <div class="card danger-card adm">
         <h2 style="color:var(--no)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>منطقة الخطر</h2>
         <p class="hint" style="margin-bottom:4px">عمليات نهائية لا يمكن التراجع عنها — سوِّ نسخة احتياطية قبل أي خطوة.</p>
         <div class="danger-row">
@@ -741,6 +776,10 @@ const FIREBASE_CONFIG = {
   appId: "1:55733943432:web:0b3bad3b90af19e1cd333d"
 };
 
+/* إيميل المشرف: العمليات الحمراء والإعدادات حصراً له.
+   ضع إيميلك الخاص هنا بعد إنشائه بـ Firebase، واتركه "" = الكل مشرف (الوضع الحالي). */
+const ADMIN_EMAIL = "";
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -759,6 +798,12 @@ const avCls = name => {
   for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
   return "av" + (h % 8);
 };
+const isAdmin = () => !ADMIN_EMAIL || !!(user && (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase());
+function requireAdmin() {
+  if (isAdmin()) return true;
+  toast("هذه العملية للمشرف فقط 🛡️", "err");
+  return false;
+}
 const todayStr = () => new Date().toLocaleDateString("en-CA");
 const fmtDate = d => { try { return new Date(d + "T00:00:00").toLocaleDateString("ar-IQ", {weekday:"short", day:"numeric", month:"short"}); } catch { return d; } };
 
@@ -852,7 +897,8 @@ let user = null;
 onAuthStateChanged(auth, u => {
   user = u;
   if (!u) { stopData(); location.replace("index.html"); return; }
-  $("#accEmail").textContent = u.email || "";
+  $("#accEmail").textContent = (u.email || "") + (ADMIN_EMAIL ? (isAdmin() ? " — مشرف 🛡️" : " — حساب مشترك") : "");
+  document.body.classList.toggle("staff", !isAdmin());
   const b = $("#boot"); if (b) b.remove();
   if (window.__bootDone) window.__bootDone();
   startData();
@@ -1629,6 +1675,23 @@ async function exportStyledXLSX(filename, sheets) {
         margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } }
     });
     const n = sh.columns.length;
+    /* محرك ملاءمة عرض A4 */
+    const PORT_W = 96, LAND_W = 137;
+    let widths = sh.columns.map(c => c.width || 14);
+    const totW = widths.reduce((a, b) => a + b, 0);
+    const landscape = sh.landscape || totW > PORT_W;
+    const targetW = landscape ? LAND_W : PORT_W;
+    if (totW < targetW) {
+      const keep = sh.columns.map(c => (c.header || "").trim() === "ت");
+      const fixedW = widths.reduce((a, w, i) => a + (keep[i] ? w : 0), 0);
+      const k = (targetW - fixedW) / Math.max(1, totW - fixedW);
+      widths = widths.map((w, i) => keep[i] ? w : Math.round(w * k * 10) / 10);
+    } else if (totW > targetW) {
+      const minW = sh.columns.map(c => c.rotate ? 4.2 : c.symbol ? 7 : c.align === "right" ? 24 : 8);
+      const k = targetW / totW;
+      widths = widths.map((w, i) => Math.max(minW[i], Math.round(w * k * 10) / 10));
+    }
+    ws.pageSetup.orientation = landscape ? "landscape" : "portrait";
     let R = 1;
     /* الترويسة الرسمية */
     if (settings.orgName1 || settings.orgName2 || logoId !== null) {
@@ -1694,7 +1757,7 @@ async function exportStyledXLSX(filename, sheets) {
     const hr = ws.getRow(HR);
     hr.height = sh.rotateDates ? 44 : 24;
     sh.columns.forEach((c, i) => {
-      ws.getColumn(i + 1).width = c.width || 14;
+      ws.getColumn(i + 1).width = widths[i];
       const cell = hr.getCell(i + 1);
       cell.value = c.header;
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: XLC.brand } };
@@ -1888,7 +1951,7 @@ function renderStudents() {
     "</div></div>" +
     (selMode ? "" :
       '<button class="btn btn-ic btn-g" data-edit="' + esc(s.id) + '" title="تعديل">' + ICO.pen + "</button>" +
-      '<button class="btn btn-ic btn-g" data-rm="' + esc(s.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + "</button>") +
+      '<button class="btn btn-ic btn-g adm" data-rm="' + esc(s.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + "</button>") +
     "</div>";
   let h = '<p class="hint" style="margin-bottom:8px">' + rows.length + " طالب" + (selMode ? " — انقر على الصف للتحديد" : "") + "</p>";
   const groups = new Map();
@@ -2012,6 +2075,7 @@ async function bulkApply(upd) {
   return ids.length;
 }
 $("#bulkDel").onclick = async () => {
+  if (!requireAdmin()) return;
   if (!selSet.size) return;
   if (!await confirmDlg("حذف <b>" + selSet.size + "</b> طالباً نهائياً؟<br><span class='hint'>سجلات حضورهم تبقى محفوظة بالسجل.</span>")) return;
   try {
@@ -2162,7 +2226,7 @@ function importPreview(items) {
         if (!fresh.length && !conflicts.length) { toast("لا يوجد جديد ولا تعارضات — كل الأسماء مطابقة", "err"); return; }
         btn.disabled = true;
         try {
-          if (newNote.length) {
+          if (newNote.length && isAdmin()) {
             await setDoc(doc(db, "meta", "config"), {
               stages: [...settings.stages, ...newVals.stages],
               sections: [...settings.sections, ...newVals.sections],
@@ -2250,7 +2314,7 @@ function renderSubjects() {
     '<p class="sec-title">' + esc(st) + "</p>" + byStage[st].map(s =>
       '<div class="rec"><div class="rmain"><b>' + esc(s.name) + "</b></div>" +
       '<button class="btn btn-ic btn-g" data-sedit="' + esc(s.id) + '" title="تعديل">' + ICO.pen + "</button>" +
-      '<button class="btn btn-ic btn-g" data-srm="' + esc(s.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + "</button></div>"
+      '<button class="btn btn-ic btn-g adm" data-srm="' + esc(s.id) + '" title="حذف" style="color:var(--no)">' + ICO.trash + "</button></div>"
     ).join("")).join("");
 }
 $("#btnAddSub").onclick = async () => {
@@ -2321,6 +2385,7 @@ function usageCount(key, val) {
   return students.filter(s => s.lab === val).length;
 }
 $("#listsBody").addEventListener("click", async e => {
+  if (!requireAdmin()) return;
   const add = e.target.closest("[data-add]");
   if (add) {
     const key = add.dataset.add, inp = $('[data-add-inp="' + key + '"]');
@@ -2410,6 +2475,7 @@ $("#btnOvRefresh").onclick = () => loadServerStats(true);
 
 /* ═══════════════ إعادة تسمية متسلسلة (مراحل/شعب/مختبرات) ═══════════════ */
 function openRenameDlg(key, oldV) {
+  if (!requireAdmin()) return;
   const field = key === "stages" ? "stage" : key === "sections" ? "section" : "lab";
   const nStu = students.filter(s => s[field] === oldV).length;
   const nSub = key === "stages" ? subjects.filter(s => s.stage === oldV).length : 0;
@@ -2476,6 +2542,7 @@ function openRenameDlg(key, oldV) {
 /* ═══════════════ استعادة من نسخة JSON ═══════════════ */
 $("#btnRestore").onclick = () => $("#fileRestore").click();
 $("#fileRestore").addEventListener("change", async e => {
+  if (!requireAdmin()) { e.target.value = ""; return; }
   const file = e.target.files[0]; e.target.value = "";
   if (!file) return;
   let data;
@@ -2561,6 +2628,7 @@ async function wipeCollection(colName, btn, label) {
   return ids.length;
 }
 $("#btnWipeAtt").onclick = async function () {
+  if (!requireAdmin()) return;
   if (!await typedConfirm("حذف <b>كل سجلات الحضور</b> نهائياً؟ الطلاب والمواد تبقى.")) return;
   const old = this.textContent; this.disabled = true;
   try {
@@ -2572,6 +2640,7 @@ $("#btnWipeAtt").onclick = async function () {
   this.disabled = false; this.textContent = old;
 };
 $("#btnWipeAll").onclick = async function () {
+  if (!requireAdmin()) return;
   if (!await typedConfirm("حذف <b>كل البيانات</b>: الطلاب والمواد وسجل الحضور نهائياً؟")) return;
   const old = this.textContent; this.disabled = true;
   try {
@@ -2808,6 +2877,7 @@ function renderTerms() {
   }).join("");
 }
 $("#btnAddTerm").onclick = async () => {
+  if (!requireAdmin()) return;
   const name = $("#tmName").value.trim(), from = $("#tmFrom").value, to = $("#tmTo").value;
   if (!name || !from || !to) { toast("اكتب الاسم وحدد تاريخي البداية والنهاية", "err"); return; }
   if (to < from) { toast("تاريخ النهاية قبل البداية!", "err"); return; }
@@ -2821,6 +2891,7 @@ $("#btnAddTerm").onclick = async () => {
   audit("term_add", "إضافة فصل: " + name + " (" + from + " ← " + to + ")");
 };
 $("#termList").addEventListener("click", async e => {
+  if (!requireAdmin()) return;
   const te = e.target.closest("[data-tedit]");
   if (te) { const t = (settings.terms || []).find(x => x.id === te.dataset.tedit); if (t) openTermDlg(t); return; }
   const c = e.target.closest("[data-tcur]"), d = e.target.closest("[data-tdel]");
@@ -2865,6 +2936,7 @@ function renderSysList() {
 }
 $("#sysList").addEventListener("change", async e => {
   const s = e.target.closest("select[data-sys]"); if (!s) return;
+  if (!requireAdmin()) { renderSysList(); return; }
   settings.stageSystems = settings.stageSystems || {};
   if (s.value) settings.stageSystems[s.dataset.sys] = s.value;
   else delete settings.stageSystems[s.dataset.sys];
@@ -2937,6 +3009,7 @@ $("#prYear").value = (() => {
   return d.getMonth() >= 8 ? y + "-" + (y + 1) : (y - 1) + "-" + y;
 })();
 $("#btnPromote").onclick = () => {
+  if (!requireAdmin()) return;
   const order = settings.stages;
   if (!order.length) { toast("ماكو مراحل معرّفة", "err"); return; }
   const gradTag = $("#prYear").value.trim();
@@ -3024,6 +3097,7 @@ function guardLock(d, stage) {
   });
 }
 $("#lockTermsChk").addEventListener("change", async e => {
+  if (!requireAdmin()) { e.target.checked = settings.lockTerms !== false; return; }
   settings.lockTerms = e.target.checked;
   await saveLists();
   audit("lock_toggle", e.target.checked ? "تفعيل قفل الفصول" : "إطفاء قفل الفصول");
@@ -3090,6 +3164,7 @@ $("#dupList").addEventListener("click", e => {
   if (g) openMergeDlg(g);
 });
 function openMergeDlg(g) {
+  if (!requireAdmin()) return;
   const wrap = document.createElement("div");
   wrap.innerHTML =
     '<p class="hint" style="margin-bottom:10px">اختر <b>الملف المعتمد</b> — الباقون تُنقل كل سجلات حضورهم إليه ثم تُحذف ملفاتهم:</p>' +
@@ -3187,6 +3262,7 @@ function renderOrg() {
 }
 $("#btnOrgLogo").onclick = () => $("#orgLogoFile").click();
 $("#orgLogoFile").addEventListener("change", e => {
+  if (!requireAdmin()) { e.target.value = ""; return; }
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;
   const rd = new FileReader();
@@ -3211,12 +3287,14 @@ $("#orgLogoFile").addEventListener("change", e => {
   rd.readAsDataURL(f);
 });
 $("#btnOrgLogoRm").onclick = async () => {
+  if (!requireAdmin()) return;
   settings.orgLogo = "";
   await saveLists();
   renderOrg();
   toast("انشال الشعار");
 };
 $("#btnOrgSave").onclick = async () => {
+  if (!requireAdmin()) return;
   settings.orgName1 = $("#orgL1").value.trim();
   settings.orgName2 = $("#orgL2").value.trim();
   await saveLists();
@@ -3231,7 +3309,7 @@ $("#btnWarnX").onclick = async function () {
   const secF = $("#wnSection").value, shF = $("#wnShift").value;
   const n1 = Math.max(1, parseInt($("#wnN1").value) || 3);
   const step = Math.max(1, parseInt($("#wnStep").value) || 2);
-  settings.alertAbs1 = n1; settings.alertStep = step; saveLists();
+  if (isAdmin()) { settings.alertAbs1 = n1; settings.alertStep = step; saveLists(); }
   const exAsAbs = (settings.alertExcused || "no") === "yes";
   const subs = subjects.filter(x => x.stage === stg).sort((a, b) => coll.compare(a.name, b.name));
   if (!subs.length) { toast("ماكو مواد لهذه المرحلة", "err"); return; }
@@ -3318,8 +3396,7 @@ $("#btnBackupX").onclick = async function () {
         meta: "نسخة احتياطية — " + todayStr() + "  •  " + att.length + " سجل",
         columns: REC_COLS, rows: att.map(recRowObj), statusKey: "status", tab: "FF0F766E" }
     ]);
-    settings.lastBackupAt = new Date().toISOString();
-    saveLists();
+    if (isAdmin()) { settings.lastBackupAt = new Date().toISOString(); saveLists(); }
     audit("backup", "نسخة احتياطية Excel (" + att.length + " سجل حضور)");
     toast("صُدّرت النسخة (" + att.length + " سجل حضور)");
   } catch (e) { toast("تعذّر التصدير: " + (e.code || e.message), "err"); }
@@ -3334,8 +3411,7 @@ $("#btnBackupJ").onclick = async function () {
     a.href = URL.createObjectURL(blob);
     a.download = "hadhir-backup-" + todayStr() + ".json";
     a.click(); URL.revokeObjectURL(a.href);
-    settings.lastBackupAt = new Date().toISOString();
-    saveLists();
+    if (isAdmin()) { settings.lastBackupAt = new Date().toISOString(); saveLists(); }
     audit("backup", "نسخة احتياطية JSON كاملة");
     toast("صُدّرت نسخة JSON كاملة");
   } catch (e) { toast("تعذّر التصدير: " + (e.code || e.message), "err"); }
